@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>ac.id.polibatam.mj.dcloud</groupId>
+		<artifactId>dcloud-root</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
+		<relativePath>../../pom.xml</relativePath>
+	</parent>
+	
+	<artifactId>dcloud-dist</artifactId>
+	<packaging>pom</packaging>
+
+	<name>dCloud - Shell Distribution</name>
+	<description>dCloud shell script distribution</description>
+
+	<properties>
+		<main.basedir>${project.basedir}/../..</main.basedir>
+	</properties>
+
+	<!-- NOTE: These dependency declarations are only required to sort this 
+		project to the end of the line in the multimodule build. Since we only include 
+		the child1 module in our assembly, we only need to ensure this distribution 
+		project builds AFTER that one... -->
+	<dependencies>
+
+		<dependency>
+			<groupId>commons-configuration</groupId>
+			<artifactId>commons-configuration</artifactId>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
+			<type>jar</type>
+		</dependency>
+	
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<type>jar</type>
+		</dependency>
+
+		<dependency>
+			<groupId>ac.id.polibatam.mj.dcloud</groupId>
+			<artifactId>dcloud-core</artifactId>
+			<type>jar</type>
+		</dependency>
+		
+		<dependency>
+			<groupId>ac.id.polibatam.mj.dcloud</groupId>
+			<artifactId>dcloud-dist</artifactId>
+			<type>pom</type>
+		</dependency>
+
+	</dependencies>
+
+	<build>
+		<finalName>${project.artifactId}-${project.version}</finalName>
+
+		<plugins>
+		
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>distro-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<appendAssemblyId>false</appendAssemblyId>
+							<descriptors>
+								<descriptor>${project.basedir}/src/assembly/bin.xml</descriptor>
+							</descriptors>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+		</plugins>
+		
+	</build>
+	
+</project>

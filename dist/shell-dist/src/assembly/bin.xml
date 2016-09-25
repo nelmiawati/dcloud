@@ -1,0 +1,104 @@
+<assembly
+	xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+	<id>bin</id>
+	<formats>
+		<format>zip</format>
+	</formats>
+
+	<fileSets>
+	</fileSets>
+
+	<files>
+		<file>
+			<source>${project.basedir}/src/resources/bin/cappend.bat</source>
+			<outputDirectory>bin/</outputDirectory>
+		</file>
+
+		<file>
+			<source>${project.basedir}/src/resources/bin/disperse.bat</source>
+			<outputDirectory>bin/</outputDirectory>
+			<filtered>true</filtered>
+		</file>
+		<file>
+			<source>${project.basedir}/src/resources/bin/disperse.sh</source>
+			<outputDirectory>bin/</outputDirectory>
+			<lineEnding>unix</lineEnding>
+			<fileMode>0744</fileMode>
+			<filtered>true</filtered>
+		</file>
+		<file>
+			<source>${project.basedir}/src/resources/bin/reconstruct.bat</source>
+			<outputDirectory>bin/</outputDirectory>
+			<filtered>true</filtered>
+		</file>
+		<file>
+			<source>${project.basedir}/src/resources/bin/reconstruct.sh</source>
+			<outputDirectory>bin/</outputDirectory>
+			<lineEnding>unix</lineEnding>
+			<fileMode>0744</fileMode>
+			<filtered>true</filtered>
+		</file>
+
+		<file>
+			<source>${project.basedir}/src/resources/bin/dcloud-upload.bat</source>
+			<outputDirectory>bin/</outputDirectory>
+			<filtered>true</filtered>
+		</file>
+		<file>
+			<source>${project.basedir}/src/resources/bin/dcloud-upload.sh</source>
+			<outputDirectory>bin/</outputDirectory>
+			<lineEnding>unix</lineEnding>
+			<fileMode>0744</fileMode>
+			<filtered>true</filtered>
+		</file>
+		<file>
+			<source>${project.basedir}/src/resources/bin/dcloud-download.bat</source>
+			<outputDirectory>bin/</outputDirectory>
+			<filtered>true</filtered>
+		</file>
+		<file>
+			<source>${project.basedir}/src/resources/bin/dcloud-download.sh</source>
+			<outputDirectory>bin/</outputDirectory>
+			<lineEnding>unix</lineEnding>
+			<fileMode>0744</fileMode>
+			<filtered>true</filtered>
+		</file>
+
+		<file>
+			<source>${project.basedir}/src/resources/conf/settings.properties</source>
+			<outputDirectory>conf/</outputDirectory>
+			<lineEnding>unix</lineEnding>
+			<filtered>true</filtered>
+		</file>
+
+		<file>
+			<source>${project.basedir}/src/resources/conf/log4j.xml</source>
+			<outputDirectory>conf/</outputDirectory>
+			<lineEnding>unix</lineEnding>
+			<filtered>true</filtered>
+		</file>
+
+		<file>
+			<source>${project.basedir}/src/resources/conf/log4j.dtd</source>
+			<outputDirectory>conf/</outputDirectory>
+			<lineEnding>unix</lineEnding>
+			<filtered>true</filtered>
+		</file>
+
+	</files>
+
+	<dependencySets>
+		<dependencySet>
+			<!-- 
+			<excludes>
+				<exclude>ac.id.polibatam.mj.dcloud:dcloud-dist</exclude>
+			</excludes>
+			 -->
+			<outputDirectory>lib</outputDirectory>
+			<unpack>false</unpack>
+		</dependencySet>
+	</dependencySets>
+
+</assembly>
