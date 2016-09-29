@@ -24,7 +24,7 @@
     </appender>
     
     <appender name="DCLOUD_LOG" class="org.apache.log4j.DailyRollingFileAppender">
-        <param name="File" value="../log/miadpacs.log" />
+        <param name="File" value="../log/dcloud.log" />
         <param name="DatePattern" value="'.'yyyyMMdd" />
         <param name="Append" value="true" />
         <layout class="org.apache.log4j.PatternLayout">
