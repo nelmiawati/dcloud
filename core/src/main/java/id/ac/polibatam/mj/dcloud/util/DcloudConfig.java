@@ -14,10 +14,8 @@ public class DcloudConfig extends AConfig {
     
     public enum Param implements IParam {
         
-        PACS_ADDRESS("pacs-address", "","^((\\s*[A-Za-z0-9]+@[A-Za-z0-9\\.]+:[0-9]+\\s*,\\s*)*)(\\s*[A-Za-z0-9]+@[A-Za-z0-9\\.]+:[0-9]+\\s*)?$"),
-        PACS_THRESHOLD_RECONSTRUCT_NB("pacs-threshold-reconstruct-nb", "0", "[0-9]"),
-        DCMRCV_LISTEN_PORT("dcmrcv-listen-port", "11113", "[0-9]"),
-        DCMQR_LISTEN_PORT("dcmqr-listen-port", "11114", "[0-9]"),
+        PARAM_STRING("param-string", "default-param-string@123", ".+"),
+        PARAM_INTEGER("param-integer", "0123456789", "[0-9]"),
         ;
         
         private final String name;
@@ -48,7 +46,7 @@ public class DcloudConfig extends AConfig {
         
     }
     
-    private static final String CONFIG_FILE_NAME = "miadpacs-config.properties";
+    private static final String CONFIG_FILE_NAME = "dcloud-config.properties";
     private static final DcloudConfig CONFIG = new DcloudConfig();    
     
     private DcloudConfig() {        

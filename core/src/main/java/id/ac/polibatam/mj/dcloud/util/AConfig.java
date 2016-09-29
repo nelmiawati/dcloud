@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.log4j.Logger;
 
 import id.ac.polibatam.mj.dcloud.exception.runtime.DcloudInvalidConfigurationRuntimeException;
 
@@ -20,6 +21,8 @@ import id.ac.polibatam.mj.dcloud.exception.runtime.DcloudInvalidConfigurationRun
  * @author mia
  */
 public abstract class AConfig {
+
+	private static final Logger LOG = Logger.getLogger(AConfig.class);
 
 	protected interface IParam {
 
@@ -58,23 +61,39 @@ public abstract class AConfig {
 	}
 
 	public String getString(final IParam param) {
-		return this.configProperties.getString(param.getName(), param.getDefaultValue());
+
+		final String value = this.configProperties.getString(param.getName(), param.getDefaultValue());
+		final Pattern pattern = Pattern.compile(param.getPattern());
+		final Matcher matcher = pattern.matcher(value.trim());
+		boolean validPattern = matcher.find();
+		if (!validPattern) {
+			throw new DcloudInvalidConfigurationRuntimeException(
+					"INVALID configuration found at configFile=[" + this.configFileURL + "], param=[" + param.getName()
+							+ "], actualValue=[" + value + "], expectedValuePattern=[" + param.getPattern() + "]");
+		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("RETRIEVED configuration at configFile=[" + this.configFileURL + "], param=["
+						+ param.getName() + "], actualValue=[" + value + "]");
+			}
+			return value;
+		}
+
 	}
 
 	public long getShort(final IParam param) {
-		return this.configProperties.getLong(param.getName(), Short.parseShort(param.getDefaultValue()));
+		return Short.parseShort(this.getString(param));
 	}
 
 	public int getInt(final IParam param) {
-		return this.configProperties.getInt(param.getName(), Integer.parseInt(param.getDefaultValue()));
+		return Integer.parseInt(this.getString(param));
 	}
 
 	public long getLong(final IParam param) {
-		return this.configProperties.getLong(param.getName(), Long.parseLong(param.getDefaultValue()));
+		return Long.parseLong(this.getString(param));
 	}
 
 	public boolean getBoolean(final IParam param) {
-		return this.configProperties.getBoolean(param.getName(), Boolean.parseBoolean(param.getDefaultValue()));
+		return Boolean.parseBoolean(this.getString(param));
 	}
 
 	public boolean setString(final IParam param, final String value) {
