@@ -5,10 +5,19 @@
  */
 package id.ac.polibatam.mj.dcloud.algo;
 
+import id.ac.polibatam.mj.dcloud.math.GFMath;
+import id.ac.polibatam.mj.dcloud.math.GFMatrix;
+
 /**
  *
  * @author mia
  */
 public class FileDispersal {
+
+	private final GFMatrix gfMatrix = new GFMatrix();
+	private final GFMath gfMath = GFMath.getInstance();
+	private int m = 0;
+	private int n = 0;
+	private int[][] mSecretKey;
 
 }
