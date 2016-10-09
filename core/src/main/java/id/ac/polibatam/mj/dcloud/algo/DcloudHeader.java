@@ -159,17 +159,25 @@ public class DcloudHeader {
 					break;
 				}
 				case TAG_DISPERSAL_IDX: {
-					final int intIdx = Integer.parseInt(Converter.convertSignedByteToHexString(value), 16);
-					if (intIdx > TAG_DISPERSAL_IDX_VALUE_MAX) {
+					final int intDispersalIdx = Integer.parseInt(Converter.convertSignedByteToHexString(value), 16);
+					if (intDispersalIdx > TAG_DISPERSAL_IDX_VALUE_MAX) {
 						throw new DcloudInvalidDataException(
 								"INVALID header, dispersalIdx=[] exceeds maximum accepted value=["
 										+ TAG_DISPERSAL_IDX_VALUE_MAX + "]");
 					} else {
-						header.setDispersalIdx(Converter.convertSignedByteToUnsignedByte(value[0]));
+						header.setDispersalIdx(intDispersalIdx);
 					}
 					break;
 				}
 				case TAG_THRESHOLD: {
+					final int intThreshold = Integer.parseInt(Converter.convertSignedByteToHexString(value), 16);
+					if (intThreshold > TAG_THRESHOLD_VALUE_MAX) {
+						throw new DcloudInvalidDataException(
+								"INVALID header, threshold=[] exceeds maximum accepted value=["
+										+ TAG_THRESHOLD_VALUE_MAX + "]");
+					} else {
+						header.setThreshold(intThreshold);
+					}
 					break;
 				}
 				default:
