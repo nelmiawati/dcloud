@@ -55,6 +55,7 @@ public class Converter {
 			return null;
 		}
 		hexString = hexString.replaceAll("\\s", "");
+		hexString = hexString.replaceAll("-", "");
 		if (hexString.length() % 2 != 0) {
 			throw new DcloudInvalidDataRuntimeException("Invalid parameter: hexString length is odd");
 		}

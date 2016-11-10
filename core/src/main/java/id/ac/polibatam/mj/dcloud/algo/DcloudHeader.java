@@ -2,32 +2,47 @@ package id.ac.polibatam.mj.dcloud.algo;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.io.Writer;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+
 import id.ac.polibatam.mj.dcloud.exception.DcloudInvalidDataException;
 import id.ac.polibatam.mj.dcloud.exception.DcloudSystemInternalException;
+import id.ac.polibatam.mj.dcloud.exception.runtime.DcloudInvalidDataRuntimeException;
 import id.ac.polibatam.mj.dcloud.util.Converter;
 
-public class DcloudHeader {
+public class DcloudHeader implements Serializable {
+
+	/**
+	 * serialVersionUID
+	 */
+	private static final long serialVersionUID = -4262627594626902686L;
 
 	private static final Logger LOG = Logger.getLogger(DcloudHeader.class);
 
-	public static final String DCLOUD_INDICATOR = "dcloud";
+	private static final byte[] DCLOUD_VERSION = { (byte) 0x01, (byte) 0x00 };
 
-	private static final byte[] DCLOUD_VERSION = { 0x01, 0x00 };
+	private static final int TAG_DISPERSAL_IDX_VALUE_MIN = 0;
 
-	private static int TAG_DISPERSAL_IDX_VALUE_MAX = 255;
+	private static final int TAG_DISPERSAL_IDX_VALUE_MAX = 255;
 
-	private static int TAG_THRESHOLD_VALUE_MAX = 255;
+	private static final int TAG_THRESHOLD_VALUE_MIN = 1;
+
+	private static final int TAG_THRESHOLD_VALUE_MAX = 255;
+
+	private static final int TAG_PADD_LEN_VALUE_MIN = 0;
+
+	private static final int TAG_PADD_LEN_VALUE_MAX = 255;
 
 	private enum HeaderTag {
 
-		TAG_DCLOUD_VERSION(0x20), TAG_V_SECRET_KEY(0x21), TAG_DISPERSAL_IDX(0x22), TAG_THRESHOLD(0x23),;
+		TAG_DCLOUD_VERSION(0x20), TAG_V_SECRET_KEY(0x21), TAG_DISPERSAL_IDX(0x22), TAG_THRESHOLD(0x23), TAG_PADDING_LEN(
+				0x24);
 
 		private int tag;
 
@@ -52,97 +67,142 @@ public class DcloudHeader {
 
 	}
 
-	private byte[] vSecretKey = null;
+	private byte[] vSecretKeyDist = null;
 
 	private int dispersalIdx = 0;
 
 	private int m = 0;
 
+	private int paddLen = 0;
+
 	public DcloudHeader() {
-
 	}
 
-	public byte[] getVSecretKey() {
-		return this.vSecretKey;
+	public byte[] getVersion() {
+		return DCLOUD_VERSION.clone();
 	}
 
-	public void setVSecretKey(final byte[] vSecretKey) {
-		this.vSecretKey = vSecretKey;
+	public byte[] getVSecretKeyDist() {
+		return this.vSecretKeyDist;
+	}
+
+	public void setVSecretKeyDist(final byte[] vSecretKeyDist) {
+		this.vSecretKeyDist = vSecretKeyDist;
+		this.validateVSecretKeyDist();
 	}
 
 	public int getDispersalIdx() {
 		return this.dispersalIdx;
 	}
 
-	public void setDispersalIdx(final int dispersalIdx) throws DcloudInvalidDataException {
-		if (dispersalIdx > TAG_DISPERSAL_IDX_VALUE_MAX) {
-			throw new DcloudInvalidDataException("INVALID header, dispersalIdx=[] exceeds maximum accepted value=["
-					+ TAG_DISPERSAL_IDX_VALUE_MAX + "]");
-		}
+	public void setDispersalIdx(final int dispersalIdx) {
 		this.dispersalIdx = dispersalIdx;
+		this.validateDispersalIdx();
 	}
 
-	public int getThreshold() throws DcloudInvalidDataException {
-		if (dispersalIdx > TAG_THRESHOLD_VALUE_MAX) {
-			throw new DcloudInvalidDataException(
-					"INVALID header, threshold=[] exceeds maximum accepted value=[" + TAG_THRESHOLD_VALUE_MAX + "]");
-		}
+	public int getThreshold() {
 		return this.m;
 	}
 
-	public void setThreshold(final int m) {
-		this.m = m;
+	public void setThreshold(final int threshold) {
+		this.m = threshold;
+		this.validateThreshold();
 	}
 
-	public static DcloudHeader parseHeader(final byte[] header)
-			throws DcloudInvalidDataException, DcloudSystemInternalException {
-
-		if (null == header) {
-			throw new DcloudInvalidDataException("INVALID null header");
-		}
-
-		byte[] headerElm = null;
-		try {
-			final byte[] dcloudIndicator = DCLOUD_INDICATOR.getBytes("UTF-8");
-			if (!Arrays.equals(dcloudIndicator, Arrays.copyOf(header, dcloudIndicator.length))) {
-				throw new DcloudInvalidDataException(
-						"INVALID header not started with bytes=" + Arrays.toString(dcloudIndicator));
-			}
-		} catch (UnsupportedEncodingException e) {
-			LOG.fatal(e.getMessage());
-			throw new DcloudSystemInternalException(e.getMessage(), e);
-		}
-		return DcloudHeader.parseHeaderElm(headerElm);
+	public int getPaddLen() {
+		return this.paddLen;
 	}
 
-	public static DcloudHeader parseHeaderElm(final byte[] headerElm) throws DcloudInvalidDataException {
+	public void setPaddLen(final int paddLen) {
+		this.paddLen = paddLen;
+		this.validatePaddLen();
+	}
 
-		final DcloudHeader header = new DcloudHeader();
+	// public static DcloudHeader parseHeader(final byte[] header)
+	// throws DcloudInvalidDataException, DcloudSystemInternalException {
+	//
+	// if (null == header) {
+	// throw new DcloudInvalidDataException("INVALID header, null bytes");
+	// }
+	//
+	// byte[] headerElm = null;
+	// try {
+	//
+	// // Check header indicator
+	// final byte[] dcloudIndicatorByte = DCLOUD_INDICATOR.getBytes("UTF-8");
+	// if (!Arrays.equals(dcloudIndicatorByte, Arrays.copyOf(header,
+	// dcloudIndicatorByte.length))) {
+	// throw new DcloudInvalidDataException(
+	// "INVALID header, bytes not started with " +
+	// Arrays.toString(dcloudIndicatorByte));
+	// }
+	//
+	// // Get header length, next 2bytes after header indicator
+	// final byte[] headerLenByte = Arrays.copyOfRange(header,
+	// dcloudIndicatorByte.length, 2);
+	// final int headerLen =
+	// Integer.parseInt(Converter.convertSignedByteToHexString(headerLenByte),
+	// 16);
+	// if (header.length != (dcloudIndicatorByte.length + headerLenByte.length +
+	// headerLen)) {
+	// throw new DcloudInvalidDataException("INVALID header, unmatch header
+	// len=["
+	// + Converter.convertSignedByteToHexString(headerLenByte) + "]");
+	// }
+	//
+	// // Get header elements
+	// headerElm = Arrays.copyOf(header, dcloudIndicatorByte.length + 2);
+	//
+	// } catch (UnsupportedEncodingException e) {
+	// LOG.fatal(e.getMessage());
+	// throw new DcloudSystemInternalException(e.getMessage(), e);
+	// }
+	//
+	// LOG.trace("header=[" + Converter.convertSignedByteToHexString(header) +
+	// "]");
+	// LOG.trace("headerElm=[" +
+	// Converter.convertSignedByteToHexString(headerElm) + "]");
+	//
+	// return DcloudHeader.parseHeaderElm(headerElm);
+	// }
 
-		if (null != headerElm) {
+	public static DcloudHeader parseHeaderElm(final byte[] headerBytes) throws DcloudInvalidDataException {
+
+		DcloudHeader header = null;
+
+		if (null != headerBytes) {
+
+			header = new DcloudHeader();
 			int idx = 0;
-			while ((idx + 1) < headerElm.length) {
-
-				final byte byteTag = headerElm[idx++];
+			while ((idx + 1) < headerBytes.length) { // Minimum valid headerElm
+														// is
+														// 1byte tag + 1byte len
+				// Get TAG
+				final byte byteTag = headerBytes[idx++];
 				final String hexStrTag = Converter.convertSignedByteToHexString(new byte[] { byteTag });
-				final int intTag = Converter.convertSignedByteToUnsignedByte(byteTag);
-				final HeaderTag tag = HeaderTag.getHeaderTag(intTag);
+				final HeaderTag tag = HeaderTag.getHeaderTag(Converter.convertSignedByteToUnsignedByte(byteTag));
 				if (null == tag) {
 					throw new DcloudInvalidDataException("INVALID header; invalid tag=[" + hexStrTag + "]");
 				}
 
-				final byte length = headerElm[idx++];
+				// Get length
+				final byte byteLength = headerBytes[idx++];
+				final String hexStrLength = Converter.convertSignedByteToHexString(new byte[] { byteLength });
+				final int length = Converter.convertSignedByteToUnsignedByte(byteLength);
 
-				final byte[] value = new byte[length];
-				if ((idx + length) < headerElm.length) {
-					System.arraycopy(headerElm, idx, value, 0, value.length);
-				} else {
-					throw new DcloudInvalidDataException("INVALID header; length of value for intTag=[" + tag
-							+ "] exceeds headerElm=[" + Arrays.toString(headerElm) + "]");
+				// Get value
+				if ((idx + length) > headerBytes.length) {
+					throw new DcloudInvalidDataException("INVALID header; length of value for tag=[" + tag
+							+ "] exceeds headerBytes=[" + Converter.convertSignedByteToHexString(headerBytes) + "]");
 				}
+				final byte[] value = Arrays.copyOfRange(headerBytes, idx, length);
 
-				LOG.debug("signedByteTag=[" + byteTag + "], hexStrTag=[" + hexStrTag + "], tag=[" + tag + "], length=["
-						+ length + "], value=[" + Arrays.toString(value) + "]");
+				// LOG
+				LOG.trace("hexStrTag=[" + hexStrTag + "], tag=[" + tag + "], hexStrLength=[" + hexStrLength
+						+ "], hexStrValue=[" + Converter.convertSignedByteToHexString(value) + "]");
+
+				// increase index
+				idx += length;
 
 				switch (tag) {
 				case TAG_DCLOUD_VERSION: {
@@ -155,43 +215,43 @@ public class DcloudHeader {
 					break;
 				}
 				case TAG_V_SECRET_KEY: {
-					header.setVSecretKey(value);
+					header.setVSecretKeyDist(value);
 					break;
 				}
 				case TAG_DISPERSAL_IDX: {
 					final int intDispersalIdx = Integer.parseInt(Converter.convertSignedByteToHexString(value), 16);
-					if (intDispersalIdx > TAG_DISPERSAL_IDX_VALUE_MAX) {
-						throw new DcloudInvalidDataException(
-								"INVALID header, dispersalIdx=[] exceeds maximum accepted value=["
-										+ TAG_DISPERSAL_IDX_VALUE_MAX + "]");
-					} else {
-						header.setDispersalIdx(intDispersalIdx);
-					}
+					header.setDispersalIdx(intDispersalIdx);
 					break;
 				}
 				case TAG_THRESHOLD: {
 					final int intThreshold = Integer.parseInt(Converter.convertSignedByteToHexString(value), 16);
-					if (intThreshold > TAG_THRESHOLD_VALUE_MAX) {
-						throw new DcloudInvalidDataException(
-								"INVALID header, threshold=[] exceeds maximum accepted value=["
-										+ TAG_THRESHOLD_VALUE_MAX + "]");
-					} else {
-						header.setThreshold(intThreshold);
-					}
+					header.setThreshold(intThreshold);
+					break;
+				}
+				case TAG_PADDING_LEN: {
+					final int paddLen = Integer.parseInt(Converter.convertSignedByteToHexString(value), 16);
+					header.setPaddLen(paddLen);
 					break;
 				}
 				default:
 					LOG.warn("NO interpretation for tag=[" + tag + "]");
 				}
 			}
+
+			if (idx != headerBytes.length) {
+				throw new DcloudInvalidDataException("INVALID header, not following TLV format");
+			}
 		}
 
+		header.validate();
 		return header;
 	}
 
 	public byte[] generateHeader() throws DcloudSystemInternalException {
 
+		this.validate();
 		byte[] header = null;
+
 		ByteArrayOutputStream baos1 = null;
 		try {
 
@@ -199,46 +259,51 @@ public class DcloudHeader {
 
 			// 4 bytes dcloud version TLV
 			baos1.write(HeaderTag.TAG_DCLOUD_VERSION.getTag());
-			baos1.write((byte) DCLOUD_VERSION.length);
+			baos1.write(DCLOUD_VERSION.length);
 			baos1.write(DCLOUD_VERSION);
 
 			// max 257 bytes IDA vSecretKey TLV
-			if (null != this.vSecretKey) {
-				baos1.write(HeaderTag.TAG_V_SECRET_KEY.getTag());
-				baos1.write((byte) this.vSecretKey.length);
-				baos1.write(this.vSecretKey);
-			}
+			baos1.write(HeaderTag.TAG_V_SECRET_KEY.getTag());
+			baos1.write(this.vSecretKeyDist.length);
+			baos1.write(this.vSecretKeyDist);
 
 			// 3 bytes dispersal IDA index TLV
-			if (this.dispersalIdx != 0) {
-				baos1.write(HeaderTag.TAG_DISPERSAL_IDX.getTag());
-				baos1.write(0x01);
-				baos1.write(this.dispersalIdx);
-			}
+			baos1.write(HeaderTag.TAG_DISPERSAL_IDX.getTag());
+			baos1.write(1);
+			baos1.write(this.dispersalIdx);
 
 			// 3 bytes IDA threshold
-			if (this.m != 0) {
-				baos1.write(HeaderTag.TAG_THRESHOLD.getTag());
-				baos1.write(0x01);
-				baos1.write(this.m);
-			}
+			baos1.write(HeaderTag.TAG_THRESHOLD.getTag());
+			baos1.write(1);
+			baos1.write(this.m);
 
-			final byte[] headerElm = baos1.toByteArray();
-			baos1.flush();
-			baos1.reset();
-			String headerElmLength = Integer.toString(headerElm.length, 16);
-			while (headerElmLength.length() < 4) {
-				headerElmLength = "0".concat(headerElmLength);
-			}
+			// 3 bytes padding len
+			baos1.write(HeaderTag.TAG_PADDING_LEN.getTag());
+			baos1.write(1);
+			baos1.write(this.paddLen);
 
-			baos1.write(DCLOUD_INDICATOR.getBytes("UTF-8"));
-			baos1.write(Converter.convertHexStringToSignedByte(headerElmLength));
-			baos1.write(headerElm);
 			header = baos1.toByteArray();
-
-		} catch (UnsupportedEncodingException e) {
-			LOG.fatal(e.getMessage());
-			throw new DcloudSystemInternalException(e.getMessage(), e);
+			// baos1.flush();
+			// baos1.reset();
+			// String headerElmLength = Integer.toString(headerElm.length, 16);
+			// while (headerElmLength.length() < 4) {
+			// headerElmLength = "0".concat(headerElmLength);
+			// }
+			//
+			// // dcoud indicator
+			// baos1.write(DCLOUD_INDICATOR.getBytes("UTF-8"));
+			//
+			// // 2 bytes headerElm len
+			// baos1.write(Converter.convertHexStringToSignedByte(headerElmLength));
+			//
+			// // header Elm
+			// baos1.write(headerElm);
+			//
+			// header = baos1.toByteArray();
+			//
+			// } catch (UnsupportedEncodingException e) {
+			// LOG.fatal(e.getMessage());
+			// throw new DcloudSystemInternalException(e.getMessage(), e);
 		} catch (IOException e) {
 			throw new DcloudSystemInternalException(e.getMessage(), e);
 		} finally {
@@ -253,16 +318,101 @@ public class DcloudHeader {
 
 		}
 
+		LOG.trace("header=[" + Converter.convertSignedByteToHexString(header) + "]");
 		return header;
 	}
 
-	public static void main(String[] args) {
-		System.out.println(Integer.toString(126, 16));
-		System.out.println(Integer.toString(127, 16));
-		System.out.println(Integer.toString(128, 16));
-		System.out.println(Integer.toString(255, 16));
-		System.out.println(Integer.toString(256, 16));
-		System.out.println(Integer.toString(257, 16));
+	public void validate() {
+		this.validateVSecretKeyDist();
+		this.validateDispersalIdx();
+		this.validateThreshold();
+		this.validatePaddLen();
 	}
+
+	private void validateVSecretKeyDist() {
+		if (null == this.vSecretKeyDist) {
+			throw new DcloudInvalidDataRuntimeException("INVALID header, null vSecretKeyDist");
+		}
+	}
+
+	private void validateDispersalIdx() {
+		if (this.dispersalIdx < TAG_DISPERSAL_IDX_VALUE_MIN || this.dispersalIdx > TAG_DISPERSAL_IDX_VALUE_MAX) {
+			throw new DcloudInvalidDataRuntimeException(
+					"INVALID header, dispersalIdx=[" + this.dispersalIdx + "] out of range "
+							+ TAG_DISPERSAL_IDX_VALUE_MIN + " <= dispersalIdx <= " + TAG_DISPERSAL_IDX_VALUE_MAX);
+		}
+	}
+
+	private void validateThreshold() {
+		if (this.m < TAG_THRESHOLD_VALUE_MIN || this.m > TAG_THRESHOLD_VALUE_MAX) {
+			throw new DcloudInvalidDataRuntimeException("INVALID header, threshold=[" + this.m + "] out of range "
+					+ TAG_THRESHOLD_VALUE_MIN + " <= threshold <= " + TAG_THRESHOLD_VALUE_MAX);
+		}
+	}
+
+	private void validatePaddLen() {
+		if (this.paddLen < TAG_PADD_LEN_VALUE_MIN || this.paddLen > TAG_PADD_LEN_VALUE_MAX) {
+			throw new DcloudInvalidDataRuntimeException("INVALID header, paddLen=[" + this.paddLen + "] out of range "
+					+ TAG_PADD_LEN_VALUE_MIN + " <= paddLen <= " + TAG_PADD_LEN_VALUE_MAX);
+		}
+	}
+
+	@Override
+	public boolean equals(final Object o) {
+
+		if (null == o) {
+			return false;
+		}
+		if (this == o) {
+			return true;
+		}
+		if (this.getClass() != o.getClass()) {
+			return false;
+		}
+		DcloudHeader other = (DcloudHeader) o;
+
+		return Objects.equal(this.vSecretKeyDist, other.getVSecretKeyDist())
+				&& this.dispersalIdx == other.getDispersalIdx() && this.m == other.getThreshold()
+				&& this.paddLen == other.getPaddLen();
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hashCode(this.getVersion(), this.vSecretKeyDist, this.dispersalIdx, this.m, this.paddLen);
+	}
+
+	@Override
+	public String toString() {
+		return MoreObjects.toStringHelper(this).addValue(Converter.convertSignedByteToHexString(this.getVersion()))
+				.addValue(Converter.convertSignedByteToHexString(this.vSecretKeyDist)).addValue(this.dispersalIdx)
+				.addValue(this.m).addValue(this.paddLen).toString();
+	}
+
+	// public static void main(String[] args) throws Exception {
+	// ByteArrayOutputStream baos = new ByteArrayOutputStream();
+	// baos.write(129);
+	// baos.write(254);
+	// baos.write(255);
+	// baos.write(256);
+	// baos.write(257);
+	// System.out.println(Arrays.toString(baos.toByteArray()));
+	// System.out.println((byte) -1);
+	// System.out.println((byte) 0);
+	// System.out.println((byte) 1);
+	// System.out.println((byte) 126);
+	// System.out.println((byte) 127);
+	// System.out.println((byte) 128);
+	// System.out.println((byte) 129);
+	// System.out.println((byte) 254);
+	// System.out.println((byte) 255);
+	// System.out.println((byte) 256);
+	// System.out.println((byte) 257);
+	// System.out.println(Integer.toString(126, 16));
+	// System.out.println(Integer.toString(127, 16));
+	// System.out.println(Integer.toString(128, 16));
+	// System.out.println(Integer.toString(255, 16));
+	// System.out.println(Integer.toString(256, 16));
+	// System.out.println(Integer.toString(257, 16));
+	// }
 
 }

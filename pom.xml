@@ -47,6 +47,8 @@
 		<commons-logging-version>1.1.2</commons-logging-version>
 		<commons-io-version>2.5</commons-io-version>
 
+		<guava-version>20.0</guava-version>
+
 		<log4j-version>1.2.17</log4j-version>
 
 		<junit-version>4.11</junit-version>
@@ -141,6 +143,13 @@
 				<version>${commons-io-version}</version>
 				<type>jar</type>
 			</dependency>
+
+	<dependency>
+		<groupId>com.google.guava</groupId>
+		<artifactId>guava</artifactId>
+		<version>${guava-version}</version>
+		<type>jar</type>
+	</dependency>
 
 			<dependency>
 				<groupId>log4j</groupId>
