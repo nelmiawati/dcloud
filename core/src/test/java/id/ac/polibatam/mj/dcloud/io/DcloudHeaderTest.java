@@ -1,4 +1,4 @@
-package id.ac.polibatam.mj.dcloud.algo;
+package id.ac.polibatam.mj.dcloud.io;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
 
+import id.ac.polibatam.mj.dcloud.io.DcloudHeader;
 import id.ac.polibatam.mj.dcloud.util.Converter;
 
 public class DcloudHeaderTest {
@@ -75,7 +76,7 @@ public class DcloudHeaderTest {
 
 		} catch (Throwable t) {
 			t1 = t;
-			LOG.error(t.getMessage(), t1);
+			LOG.error(t.getMessage(), t);
 		}
 		assertNull(t1);
 	}

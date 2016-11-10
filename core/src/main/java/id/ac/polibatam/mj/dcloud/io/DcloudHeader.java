@@ -1,4 +1,4 @@
-package id.ac.polibatam.mj.dcloud.algo;
+package id.ac.polibatam.mj.dcloud.io;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -25,6 +25,11 @@ public class DcloudHeader implements Serializable, Cloneable {
 	private static final long serialVersionUID = -4262627594626902686L;
 
 	private static final Logger LOG = Logger.getLogger(DcloudHeader.class);
+
+	private static final byte[] DCLOUD_INDICATOR = { (byte) 0x64, (byte) 0x63, (byte) 0x6C, (byte) 0x6F, (byte) 0x75,
+			(byte) 0x64 };
+
+	public static final int HEADER_MAX_LEN = 270;
 
 	private static final byte[] DCLOUD_VERSION = { (byte) 0x01, (byte) 0x00 };
 
@@ -79,7 +84,11 @@ public class DcloudHeader implements Serializable, Cloneable {
 	public DcloudHeader() {
 	}
 
-	public byte[] getVersion() {
+	public static byte[] getIndicator() {
+		return DCLOUD_INDICATOR.clone();
+	}
+
+	public static byte[] getVersion() {
 		return DCLOUD_VERSION.clone();
 	}
 
@@ -202,7 +211,6 @@ public class DcloudHeader implements Serializable, Cloneable {
 				LOG.trace("hexStrTag=[" + hexStrTag + "], tag=[" + tag + "], hexStrLength=[" + hexStrLength
 						+ "], hexStrValue=[" + Converter.convertSignedByteToHexString(value) + "]");
 
-
 				switch (tag) {
 				case TAG_DCLOUD_VERSION: {
 					if (!Arrays.equals(DCLOUD_VERSION, value)) {
@@ -242,15 +250,24 @@ public class DcloudHeader implements Serializable, Cloneable {
 			}
 		}
 
-		header.validate();
+		try {
+			header.validate();
+		} catch (DcloudInvalidDataRuntimeException e) {
+			throw new DcloudInvalidDataException(e.getMessage(), e);
+		}
+
 		return header;
 	}
 
-	public byte[] generateHeader() throws DcloudSystemInternalException {
+	public byte[] generateHeader() throws DcloudInvalidDataException, DcloudSystemInternalException {
 
-		this.validate();
+		try {
+			this.validate();
+		} catch (DcloudInvalidDataRuntimeException e) {
+			throw new DcloudInvalidDataException(e.getMessage(), e);
+		}
+
 		byte[] header = null;
-
 		ByteArrayOutputStream baos1 = null;
 		try {
 
@@ -387,19 +404,21 @@ public class DcloudHeader implements Serializable, Cloneable {
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(this.getVersion(), this.vSecretKeyDist, this.dispersalIdx, this.m, this.paddLen);
+		return Objects.hashCode(DCLOUD_VERSION, this.vSecretKeyDist, this.dispersalIdx, this.m, this.paddLen);
 	}
 
 	@Override
 	public String toString() {
-		return MoreObjects.toStringHelper(this)
-				.add("version", Converter.convertSignedByteToHexString(this.getVersion()))
+		return MoreObjects.toStringHelper(this).add("version", Converter.convertSignedByteToHexString(DCLOUD_VERSION))
 				.add("vSecretKeyDist", Converter.convertSignedByteToHexString(this.vSecretKeyDist))
 				.add("dispersalIdx", this.dispersalIdx).add("threshold", this.m).add("paddLen", this.paddLen)
 				.toString();
 	}
 
 	// public static void main(String[] args) throws Exception {
+	//
+	// System.out.println(Converter.convertSignedByteToHexString("dcloud".getBytes("UTF-8")));
+	//
 	// ByteArrayOutputStream baos = new ByteArrayOutputStream();
 	// baos.write(129);
 	// baos.write(254);
