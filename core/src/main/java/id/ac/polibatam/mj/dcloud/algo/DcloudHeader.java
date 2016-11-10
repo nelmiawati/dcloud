@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -16,7 +17,7 @@ import id.ac.polibatam.mj.dcloud.exception.DcloudSystemInternalException;
 import id.ac.polibatam.mj.dcloud.exception.runtime.DcloudInvalidDataRuntimeException;
 import id.ac.polibatam.mj.dcloud.util.Converter;
 
-public class DcloudHeader implements Serializable {
+public class DcloudHeader implements Serializable, Cloneable {
 
 	/**
 	 * serialVersionUID
@@ -33,7 +34,7 @@ public class DcloudHeader implements Serializable {
 
 	private static final int TAG_THRESHOLD_VALUE_MIN = 1;
 
-	private static final int TAG_THRESHOLD_VALUE_MAX = 255;
+	private static final int TAG_THRESHOLD_VALUE_MAX = 254;
 
 	private static final int TAG_PADD_LEN_VALUE_MIN = 0;
 
@@ -46,7 +47,7 @@ public class DcloudHeader implements Serializable {
 
 		private int tag;
 
-		private static Map<Integer, HeaderTag> HEADER_TAG_MAP;
+		private static final Map<Integer, HeaderTag> HEADER_TAG_MAP = new HashMap<Integer, DcloudHeader.HeaderTag>();
 		static {
 			for (HeaderTag headerTag : HeaderTag.values()) {
 				HEADER_TAG_MAP.put(Integer.valueOf(headerTag.getTag()), headerTag);
@@ -166,7 +167,7 @@ public class DcloudHeader implements Serializable {
 	// return DcloudHeader.parseHeaderElm(headerElm);
 	// }
 
-	public static DcloudHeader parseHeaderElm(final byte[] headerBytes) throws DcloudInvalidDataException {
+	public static DcloudHeader parseHeader(final byte[] headerBytes) throws DcloudInvalidDataException {
 
 		DcloudHeader header = null;
 
@@ -195,14 +196,12 @@ public class DcloudHeader implements Serializable {
 					throw new DcloudInvalidDataException("INVALID header; length of value for tag=[" + tag
 							+ "] exceeds headerBytes=[" + Converter.convertSignedByteToHexString(headerBytes) + "]");
 				}
-				final byte[] value = Arrays.copyOfRange(headerBytes, idx, length);
+				final byte[] value = Arrays.copyOfRange(headerBytes, idx, idx += length);
 
 				// LOG
 				LOG.trace("hexStrTag=[" + hexStrTag + "], tag=[" + tag + "], hexStrLength=[" + hexStrLength
 						+ "], hexStrValue=[" + Converter.convertSignedByteToHexString(value) + "]");
 
-				// increase index
-				idx += length;
 
 				switch (tag) {
 				case TAG_DCLOUD_VERSION: {
@@ -358,6 +357,16 @@ public class DcloudHeader implements Serializable {
 	}
 
 	@Override
+	public Object clone() {
+		final DcloudHeader clone = new DcloudHeader();
+		clone.setVSecretKeyDist(this.vSecretKeyDist.clone());
+		clone.setDispersalIdx(this.dispersalIdx);
+		clone.setThreshold(this.m);
+		clone.setPaddLen(this.paddLen);
+		return clone;
+	}
+
+	@Override
 	public boolean equals(final Object o) {
 
 		if (null == o) {
@@ -371,7 +380,7 @@ public class DcloudHeader implements Serializable {
 		}
 		DcloudHeader other = (DcloudHeader) o;
 
-		return Objects.equal(this.vSecretKeyDist, other.getVSecretKeyDist())
+		return Arrays.equals(this.vSecretKeyDist, other.getVSecretKeyDist())
 				&& this.dispersalIdx == other.getDispersalIdx() && this.m == other.getThreshold()
 				&& this.paddLen == other.getPaddLen();
 	}
@@ -383,9 +392,11 @@ public class DcloudHeader implements Serializable {
 
 	@Override
 	public String toString() {
-		return MoreObjects.toStringHelper(this).addValue(Converter.convertSignedByteToHexString(this.getVersion()))
-				.addValue(Converter.convertSignedByteToHexString(this.vSecretKeyDist)).addValue(this.dispersalIdx)
-				.addValue(this.m).addValue(this.paddLen).toString();
+		return MoreObjects.toStringHelper(this)
+				.add("version", Converter.convertSignedByteToHexString(this.getVersion()))
+				.add("vSecretKeyDist", Converter.convertSignedByteToHexString(this.vSecretKeyDist))
+				.add("dispersalIdx", this.dispersalIdx).add("threshold", this.m).add("paddLen", this.paddLen)
+				.toString();
 	}
 
 	// public static void main(String[] args) throws Exception {
