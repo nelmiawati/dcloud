@@ -42,10 +42,13 @@ public abstract class AConfig {
 		final URL url = ClassLoader.getSystemResource(this.getConfigFileName());
 		if (null == url) {
 			throw new DcloudInvalidConfigurationRuntimeException(
-					"config-file=[" + this.getConfigFileName() + "] is NOT existing");
+					"LOADING NON-EXIST config-file=[" + this.getConfigFileName() + "]");
 		}
 		try {
 			this.configFileURL = url.getFile();
+			if (LOG.isInfoEnabled()) {
+				LOG.info("LOADING config-file=[" + this.configFileURL + "]");
+			}
 			final PropertiesConfiguration propConfig = new PropertiesConfiguration(this.configFileURL);
 			propConfig.setDelimiterParsingDisabled(true);
 			propConfig.setAutoSave(true);
@@ -71,9 +74,8 @@ public abstract class AConfig {
 					"INVALID configuration found at configFile=[" + this.configFileURL + "], param=[" + param.getName()
 							+ "], actualValue=[" + value + "], expectedValuePattern=[" + param.getPattern() + "]");
 		} else {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("RETRIEVED configuration at configFile=[" + this.configFileURL + "], param=["
-						+ param.getName() + "], actualValue=[" + value + "]");
+			if (LOG.isTraceEnabled()) {
+				LOG.trace("RETRIEVED configuration param=[" + param.getName() + "], actualValue=[" + value + "]");
 			}
 			return value;
 		}

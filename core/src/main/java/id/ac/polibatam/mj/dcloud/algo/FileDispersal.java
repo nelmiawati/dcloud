@@ -9,8 +9,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Random;
 
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import id.ac.polibatam.mj.dcloud.exception.DcloudInvalidDataException;
@@ -108,8 +110,14 @@ public class FileDispersal {
 			while (fis.read(buffReadByteColumn) > -1) {
 				this.gfMatrix.setColumn(buffRead, Converter.convertSignedByteToUnsignedByte(buffReadByteColumn), 0);
 				int[][] buffWriteInt = null;
+				if (LOG.isTraceEnabled()) {
+					LOG.trace("buffRead=[" + Arrays.deepToString(buffRead) + "]");
+				}
 				if (useSalt) {
 					final int[][] salt = this.generateSalt(random, this.m, 1);
+					if (LOG.isTraceEnabled()) {
+						LOG.trace("salt=[" + Arrays.deepToString(salt) + "]");
+					}
 					buffWriteInt = this.gfMatrix.multiply(this.mSecretKey, this.gfMatrix.add(buffRead, salt));
 				} else {
 					buffWriteInt = this.gfMatrix.multiply(this.mSecretKey, buffRead);
@@ -129,7 +137,9 @@ public class FileDispersal {
 				try {
 					fis.close();
 				} catch (IOException e) {
-					LOG.warn(e.getMessage());
+					if (LOG.isEnabledFor(Level.WARN)) {
+						LOG.warn(e.getMessage());
+					}
 				}
 
 				for (DcloudFileOutputStream dos : arDos) {
@@ -137,7 +147,9 @@ public class FileDispersal {
 						try {
 							dos.close();
 						} catch (IOException e) {
-							LOG.warn(e.getMessage());
+							if (LOG.isEnabledFor(Level.WARN)) {
+								LOG.warn(e.getMessage());
+							}
 						}
 					}
 				}

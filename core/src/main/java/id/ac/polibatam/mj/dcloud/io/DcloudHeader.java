@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import com.google.common.base.MoreObjects;
@@ -208,8 +209,10 @@ public class DcloudHeader implements Serializable, Cloneable {
 				final byte[] value = Arrays.copyOfRange(headerBytes, idx, idx += length);
 
 				// LOG
-				LOG.trace("hexStrTag=[" + hexStrTag + "], tag=[" + tag + "], hexStrLength=[" + hexStrLength
-						+ "], hexStrValue=[" + Converter.convertSignedByteToHexString(value) + "]");
+				if (LOG.isTraceEnabled()) {
+					LOG.trace("hexStrTag=[" + hexStrTag + "], tag=[" + tag + "], hexStrLength=[" + hexStrLength
+							+ "], hexStrValue=[" + Converter.convertSignedByteToHexString(value) + "]");
+				}
 
 				switch (tag) {
 				case TAG_DCLOUD_VERSION: {
@@ -241,7 +244,9 @@ public class DcloudHeader implements Serializable, Cloneable {
 					break;
 				}
 				default:
-					LOG.warn("NO interpretation for tag=[" + tag + "]");
+					if (LOG.isEnabledFor(Level.WARN)) {
+						LOG.warn("NO interpretation for tag=[" + tag + "]");
+					}
 				}
 			}
 
@@ -328,13 +333,17 @@ public class DcloudHeader implements Serializable, Cloneable {
 				try {
 					baos1.close();
 				} catch (IOException e) {
-					LOG.warn(e.getMessage());
+					if (LOG.isEnabledFor(Level.WARN)) {
+						LOG.warn(e.getMessage());
+					}
 				}
 			}
 
 		}
 
-		LOG.trace("header=[" + Converter.convertSignedByteToHexString(header) + "]");
+		if (LOG.isTraceEnabled()) {
+			LOG.trace("header=[" + Converter.convertSignedByteToHexString(header) + "]");
+		}
 		return header;
 	}
 

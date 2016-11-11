@@ -5,6 +5,7 @@ package id.ac.polibatam.mj.dcloud.main;
 
 import java.util.Arrays;
 
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 /**
@@ -20,8 +21,12 @@ public final class Reconstruct {
 	 */
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		LOG.trace(Arrays.toString(args));
-		LOG.warn(Reconstruct.class + ": NOT IMPLEMENTED");
+		if (LOG.isTraceEnabled()) {
+			LOG.trace("args=[" + Arrays.toString(args) + "]");
+		}
+		if (LOG.isEnabledFor(Level.WARN)) {
+			LOG.warn(DcloudDownload.class + ": NOT IMPLEMENTED");
+		}
 	}
 
 }

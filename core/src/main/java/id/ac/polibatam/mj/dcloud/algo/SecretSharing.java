@@ -36,8 +36,8 @@ public class SecretSharing {
 
 	public int[][] split(final int n, final int t, final int[] secret) {
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("n=[" + n + "], t=[" + t + "], secret=[" + Arrays.toString(secret) + "]");
+		if (LOG.isTraceEnabled()) {
+			LOG.trace("n=[" + n + "], t=[" + t + "], secret=[" + Arrays.toString(secret) + "]");
 		}
 
 		if (n <= 0) {
@@ -55,8 +55,8 @@ public class SecretSharing {
 		}
 
 		final int[][] secretPolynomial = this.computeSecretPolynomial(secret, t);
-		if (LOG.isDebugEnabled()) {
-			LOG.debug(Arrays.deepToString(secretPolynomial));
+		if (LOG.isTraceEnabled()) {
+			LOG.trace(Arrays.deepToString(secretPolynomial));
 		}
 		return this.evalPolynomial(secretPolynomial, n);
 	}
@@ -129,8 +129,8 @@ public class SecretSharing {
 			}
 			sharedKeysIdx[i] = sharedKeys[i][sharedKeys[i].length - 1];
 		}
-		if (LOG.isDebugEnabled()) {
-			LOG.debug(Arrays.toString(sharedKeysIdx));
+		if (LOG.isTraceEnabled()) {
+			LOG.trace(Arrays.toString(sharedKeysIdx));
 		}
 		final int[] lagrange = this.computeLagrange(sharedKeysIdx);
 
