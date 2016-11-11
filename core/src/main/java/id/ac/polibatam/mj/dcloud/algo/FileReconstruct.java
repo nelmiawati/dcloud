@@ -104,6 +104,11 @@ public class FileReconstruct {
 						mWrite = this.gfMatrix.solveVandermondeSystemT(vSecretKeyStar, mRead);
 					}
 					if (null != bWrite) {
+						// if (LOG.isTraceEnabled()) {
+						// LOG.trace("Write bWrite=[" +
+						// Converter.convertSignedByteToHexString(bWrite) +
+						// "]");
+						// }
 						fos.write(bWrite);
 						fos.flush();
 					}
@@ -114,7 +119,8 @@ public class FileReconstruct {
 
 			if (null != bWrite) {
 				if (LOG.isTraceEnabled()) {
-					LOG.trace("Write last bWrite with padding=[" + arDis[0].getHeader().getPaddLen() + "]");
+					LOG.trace("Write last bWrite with padding=[" + arDis[0].getHeader().getPaddLen() + "], bWrite=["
+							+ Converter.convertSignedByteToHexString(bWrite) + "]");
 				}
 				fos.write(bWrite, 0, bWrite.length - arDis[0].getHeader().getPaddLen());
 				fos.flush();

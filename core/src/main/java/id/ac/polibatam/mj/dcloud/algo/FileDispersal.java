@@ -94,7 +94,15 @@ public class FileDispersal {
 		try {
 
 			// Prepare reader
-			final int paddLen = (int) (origFile.length() % (long) this.n);
+			int paddLen = (int) (origFile.length() % (long) this.m);
+			if (0 != paddLen) {
+				paddLen = this.m - paddLen;
+			}
+			if (LOG.isTraceEnabled()) {
+				LOG.trace("origFile.length=[" + origFile.length() + "]");
+				LOG.trace("n=[" + m + "]");
+				LOG.trace("origFile.length % m=[" + paddLen + "]");
+			}
 			fis = new FileInputStream(origFile);
 
 			// Prepare writer
