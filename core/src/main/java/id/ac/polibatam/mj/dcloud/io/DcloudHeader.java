@@ -328,7 +328,7 @@ public class DcloudHeader implements Serializable, Cloneable {
 				try {
 					baos1.close();
 				} catch (IOException e) {
-					LOG.warn(e.getMessage(), e);
+					LOG.warn(e.getMessage());
 				}
 			}
 
