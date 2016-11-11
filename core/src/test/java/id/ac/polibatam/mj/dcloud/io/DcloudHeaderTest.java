@@ -33,7 +33,7 @@ public class DcloudHeaderTest {
 
 	private String headerBadInvalidThStr = "200201002105FF000A00002201402301002401FF";
 
-	private String headerBadInvalidVSekretKeyDistLenStr = "200201002104FF000A00002201402301802401FF";
+	private String headerBadInvalidVSecretShareLenStr = "200201002104FF000A00002201402301802401FF";
 
 	private String headerBadExtraLenStr = "200201002105FF000A00002201402301802401FF00";
 
@@ -42,7 +42,7 @@ public class DcloudHeaderTest {
 		header0 = new DcloudHeader();
 
 		header1 = new DcloudHeader();
-		header1.setVSecretKeyDist(new byte[] { (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 });
+		header1.setVSecretShare(new byte[] { (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00 });
 		header1.setDispersalIdx(4);
 		header1.setThreshold(5);
 		header1.setPaddLen(3);
@@ -51,7 +51,7 @@ public class DcloudHeaderTest {
 		header1CopyClone = (DcloudHeader) header1.clone();
 
 		header2 = new DcloudHeader();
-		header2.setVSecretKeyDist(new byte[] { (byte) 0xFF, (byte) 0x00, (byte) 0x0A, (byte) 0x00, (byte) 0x00 });
+		header2.setVSecretShare(new byte[] { (byte) 0xFF, (byte) 0x00, (byte) 0x0A, (byte) 0x00, (byte) 0x00 });
 		header2.setDispersalIdx(64);
 		header2.setThreshold(128);
 		header2.setPaddLen(255);
@@ -141,7 +141,7 @@ public class DcloudHeaderTest {
 
 		Throwable t3 = null;
 		try {
-			DcloudHeader.parseHeader(Converter.convertHexStringToSignedByte(headerBadInvalidVSekretKeyDistLenStr));
+			DcloudHeader.parseHeader(Converter.convertHexStringToSignedByte(headerBadInvalidVSecretShareLenStr));
 		} catch (Throwable t) {
 			// LOG.error(t.getMessage(), t);
 			t3 = t;

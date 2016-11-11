@@ -48,7 +48,7 @@ public class DcloudHeader implements Serializable, Cloneable {
 
 	private enum HeaderTag {
 
-		TAG_DCLOUD_VERSION(0x20), TAG_V_SECRET_KEY(0x21), TAG_DISPERSAL_IDX(0x22), TAG_THRESHOLD(0x23), TAG_PADDING_LEN(
+		TAG_DCLOUD_VERSION(0x20), TAG_V_SECRET_SHARE(0x21), TAG_DISPERSAL_IDX(0x22), TAG_THRESHOLD(0x23), TAG_PADDING_LEN(
 				0x24);
 
 		private int tag;
@@ -74,7 +74,7 @@ public class DcloudHeader implements Serializable, Cloneable {
 
 	}
 
-	private byte[] vSecretKeyDist = null;
+	private byte[] vSecretShare = null;
 
 	private int dispersalIdx = 0;
 
@@ -93,13 +93,13 @@ public class DcloudHeader implements Serializable, Cloneable {
 		return DCLOUD_VERSION.clone();
 	}
 
-	public byte[] getVSecretKeyDist() {
-		return this.vSecretKeyDist;
+	public byte[] getVSecretShare() {
+		return this.vSecretShare;
 	}
 
-	public void setVSecretKeyDist(final byte[] vSecretKeyDist) {
-		this.vSecretKeyDist = vSecretKeyDist;
-		this.validateVSecretKeyDist();
+	public void setVSecretShare(final byte[] vSecretShare) {
+		this.vSecretShare = vSecretShare;
+		this.validateVSecretShare();
 	}
 
 	public int getDispersalIdx() {
@@ -224,8 +224,8 @@ public class DcloudHeader implements Serializable, Cloneable {
 					}
 					break;
 				}
-				case TAG_V_SECRET_KEY: {
-					header.setVSecretKeyDist(value);
+				case TAG_V_SECRET_SHARE: {
+					header.setVSecretShare(value);
 					break;
 				}
 				case TAG_DISPERSAL_IDX: {
@@ -284,9 +284,9 @@ public class DcloudHeader implements Serializable, Cloneable {
 			baos1.write(DCLOUD_VERSION);
 
 			// max 257 bytes IDA vSecretKey TLV
-			baos1.write(HeaderTag.TAG_V_SECRET_KEY.getTag());
-			baos1.write(this.vSecretKeyDist.length);
-			baos1.write(this.vSecretKeyDist);
+			baos1.write(HeaderTag.TAG_V_SECRET_SHARE.getTag());
+			baos1.write(this.vSecretShare.length);
+			baos1.write(this.vSecretShare);
 
 			// 3 bytes dispersal IDA index TLV
 			baos1.write(HeaderTag.TAG_DISPERSAL_IDX.getTag());
@@ -348,15 +348,15 @@ public class DcloudHeader implements Serializable, Cloneable {
 	}
 
 	public void validate() {
-		this.validateVSecretKeyDist();
+		this.validateVSecretShare();
 		this.validateDispersalIdx();
 		this.validateThreshold();
 		this.validatePaddLen();
 	}
 
-	private void validateVSecretKeyDist() {
-		if (null == this.vSecretKeyDist) {
-			throw new DcloudInvalidDataRuntimeException("INVALID header, null vSecretKeyDist");
+	private void validateVSecretShare() {
+		if (null == this.vSecretShare) {
+			throw new DcloudInvalidDataRuntimeException("INVALID header, null vSecretShare");
 		}
 	}
 
@@ -385,7 +385,7 @@ public class DcloudHeader implements Serializable, Cloneable {
 	@Override
 	public Object clone() {
 		final DcloudHeader clone = new DcloudHeader();
-		clone.setVSecretKeyDist(this.vSecretKeyDist.clone());
+		clone.setVSecretShare(this.vSecretShare.clone());
 		clone.setDispersalIdx(this.dispersalIdx);
 		clone.setThreshold(this.m);
 		clone.setPaddLen(this.paddLen);
@@ -406,20 +406,20 @@ public class DcloudHeader implements Serializable, Cloneable {
 		}
 		DcloudHeader other = (DcloudHeader) o;
 
-		return Arrays.equals(this.vSecretKeyDist, other.getVSecretKeyDist())
+		return Arrays.equals(this.vSecretShare, other.getVSecretShare())
 				&& this.dispersalIdx == other.getDispersalIdx() && this.m == other.getThreshold()
 				&& this.paddLen == other.getPaddLen();
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(DCLOUD_VERSION, this.vSecretKeyDist, this.dispersalIdx, this.m, this.paddLen);
+		return Objects.hashCode(DCLOUD_VERSION, this.vSecretShare, this.dispersalIdx, this.m, this.paddLen);
 	}
 
 	@Override
 	public String toString() {
 		return MoreObjects.toStringHelper(this).add("version", Converter.convertSignedByteToHexString(DCLOUD_VERSION))
-				.add("vSecretKeyDist", Converter.convertSignedByteToHexString(this.vSecretKeyDist))
+				.add("vSecretKeyDist", Converter.convertSignedByteToHexString(this.vSecretShare))
 				.add("dispersalIdx", this.dispersalIdx).add("threshold", this.m).add("paddLen", this.paddLen)
 				.toString();
 	}

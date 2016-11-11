@@ -16,10 +16,13 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import id.ac.polibatam.mj.dcloud.exception.DcloudInvalidDataException;
+import id.ac.polibatam.mj.dcloud.exception.DcloudSystemInternalException;
 import id.ac.polibatam.mj.dcloud.io.DcloudFileOutputStream;
 import id.ac.polibatam.mj.dcloud.io.DcloudHeader;
 import id.ac.polibatam.mj.dcloud.math.GFMath;
 import id.ac.polibatam.mj.dcloud.math.GFMatrix;
+import id.ac.polibatam.mj.dcloud.math.IDAMath;
+import id.ac.polibatam.mj.dcloud.util.ArrayUtils;
 import id.ac.polibatam.mj.dcloud.util.Converter;
 
 /**
@@ -43,25 +46,33 @@ public class FileDispersal {
 			throw new DcloudInvalidDataException("INVALID vSecretKey, length has to be > 1");
 		}
 
-		if (!this.isUnique(vSecretKey)) {
+		if (!ArrayUtils.isUnique(vSecretKey)) {
 			throw new DcloudInvalidDataException("INVALID vSecretKey, elements have to be unique");
 		}
 
 		if (threshold < 1 || threshold > vSecretKey.length) {
 			throw new DcloudInvalidDataException(
-					"INVALID threshold, value must be in the range of 1 < threshold <= vSecrentKey.length");
+					"INVALID threshold, has to be in the range of 1 < threshold <= vSecrentKey.length");
 		}
 
 		this.m = threshold;
 		this.n = vSecretKey.length;
 		final int[] unsignedVSecretKey = Converter.convertSignedByteToUnsignedByte(vSecretKey);
-		this.randomSeed = this.generateRandomSeed(unsignedVSecretKey);
+
+		this.randomSeed = IDAMath.generateRandomSeed(this.gfMath, unsignedVSecretKey);
+		if (LOG.isTraceEnabled()) {
+			LOG.trace("randomSeed=[" + randomSeed + "]");
+		}
+
 		this.generateSecretKey(unsignedVSecretKey);
+		if (LOG.isTraceEnabled()) {
+			LOG.trace("mSecretKey=[" + Arrays.deepToString(this.mSecretKey) + "]");
+		}
 
 	}
 
 	public File[] disperse(final File origFile, File outputDir, final boolean useSalt)
-			throws DcloudInvalidDataException {
+			throws DcloudInvalidDataException, DcloudSystemInternalException {
 
 		if (null == origFile || null == outputDir) {
 			throw new DcloudInvalidDataException("INVALID null origFile or null outputDir");
@@ -95,7 +106,7 @@ public class FileDispersal {
 				header.setDispersalIdx(i);
 				header.setPaddLen(paddLen);
 				header.setThreshold(this.m);
-				header.setVSecretKeyDist(Converter.convertUnsignedByteToSignedByte(unsignedSecretShares[i]));
+				header.setVSecretShare(Converter.convertUnsignedByteToSignedByte(unsignedSecretShares[i]));
 
 				dispersedFiles[i] = new File(outputDir.getAbsolutePath().concat(File.separator)
 						.concat(origFile.getName()).concat(".").concat(Integer.toString(i)).concat(".dc"));
@@ -105,16 +116,18 @@ public class FileDispersal {
 
 			// Execute now
 			final Random random = new Random(this.randomSeed);
-			final int[][] buffRead = new int[this.n][1];
-			final byte[] buffReadByteColumn = new byte[this.n];
+			final int[][] buffRead = new int[this.m][1];
+			final byte[] buffReadByteColumn = new byte[this.m];
 			while (fis.read(buffReadByteColumn) > -1) {
+
 				this.gfMatrix.setColumn(buffRead, Converter.convertSignedByteToUnsignedByte(buffReadByteColumn), 0);
-				int[][] buffWriteInt = null;
 				if (LOG.isTraceEnabled()) {
 					LOG.trace("buffRead=[" + Arrays.deepToString(buffRead) + "]");
 				}
+
+				int[][] buffWriteInt = null;
 				if (useSalt) {
-					final int[][] salt = this.generateSalt(random, this.m, 1);
+					final int[][] salt = IDAMath.generateSalt(random, this.m, 1);
 					if (LOG.isTraceEnabled()) {
 						LOG.trace("salt=[" + Arrays.deepToString(salt) + "]");
 					}
@@ -131,7 +144,7 @@ public class FileDispersal {
 		} catch (FileNotFoundException e) {
 			throw new DcloudInvalidDataException(e.getMessage(), e);
 		} catch (IOException e) {
-			throw new DcloudInvalidDataException(e.getMessage(), e);
+			throw new DcloudSystemInternalException(e.getMessage(), e);
 		} finally {
 			if (null != fis) {
 				try {
@@ -143,7 +156,7 @@ public class FileDispersal {
 				}
 
 				for (DcloudFileOutputStream dos : arDos) {
-					if (null != arDos) {
+					if (null != dos) {
 						try {
 							dos.close();
 						} catch (IOException e) {
@@ -157,26 +170,6 @@ public class FileDispersal {
 		}
 
 		return dispersedFiles;
-	}
-
-	private boolean isUnique(final byte[] arr) {
-
-		for (int i = 0; i < arr.length; i++) {
-			for (int j = (i + 1); j < arr.length; j++) {
-				if (arr[i] == arr[j]) {
-					return false;
-				}
-			}
-		}
-		return true;
-	}
-
-	private int generateRandomSeed(final int[] unsignedVSecretKey) {
-		int seed = 0;
-		for (int elm : unsignedVSecretKey) {
-			seed = this.gfMath.add(this.randomSeed, elm);
-		}
-		return seed;
 	}
 
 	private void generateSecretKey(final int[] unsignedVSecretKey) {
@@ -201,16 +194,4 @@ public class FileDispersal {
 
 	}
 
-	private int[][] generateSalt(final Random random, final int nbRow, final int nbColumn) {
-
-		final int[][] salt = new int[nbRow][nbColumn];
-		for (int i = 0; i < salt.length; i++) {
-			final int r = random.nextInt(256);
-			for (int j = 0; j < salt[i].length; j++) {
-				salt[i][j] = r;
-			}
-		}
-
-		return salt;
-	}
 }
