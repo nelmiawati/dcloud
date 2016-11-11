@@ -27,15 +27,15 @@ public class DcloudHeaderTest {
 
 	private DcloudHeader header2;
 
-	private String header1Str = "2002010021050000000000220104230105240103";
+	private String header1Str = "20020100210500000000002201042301052401032510DB89BB5CEAB87F9C0FCC2AB36C189C2C";
 
-	private String header2Str = "200201002105FF000A00002201402301802401FF";
+	private String header2Str = "200201002105FF000A00002201402301802401FF2510DB89BB5CEAB87F9C0FCC2AB36C189C2C";
 
-	private String headerBadInvalidThStr = "200201002105FF000A00002201402301002401FF";
+	private String headerBadInvalidThStr = "200201002105FF000A00002201402301002401FF2510DB89BB5CEAB87F9C0FCC2AB36C189C2C";
 
-	private String headerBadInvalidVSecretShareLenStr = "200201002104FF000A00002201402301802401FF";
+	private String headerBadInvalidVSecretShareLenStr = "200201002104FF000A00002201402301802401FF2510DB89BB5CEAB87F9C0FCC2AB36C189C2C";
 
-	private String headerBadExtraLenStr = "200201002105FF000A00002201402301802401FF00";
+	private String headerBadExtraLenStr = "200201002105FF000A00002201402301802401FF2510DB89BB5CEAB87F9C0FCC2AB36C189C2C00";
 
 	@Before
 	public void before() {
@@ -46,6 +46,7 @@ public class DcloudHeaderTest {
 		header1.setDispersalIdx(4);
 		header1.setThreshold(5);
 		header1.setPaddLen(3);
+		header1.setMd5(Converter.convertHexStringToSignedByte("DB89BB5CEAB87F9C0FCC2AB36C189C2C"));
 
 		header1CopyRef = header1;
 		header1CopyClone = (DcloudHeader) header1.clone();
@@ -55,6 +56,7 @@ public class DcloudHeaderTest {
 		header2.setDispersalIdx(64);
 		header2.setThreshold(128);
 		header2.setPaddLen(255);
+		header2.setMd5(Converter.convertHexStringToSignedByte("DB89BB5CEAB87F9C0FCC2AB36C189C2C"));
 	}
 
 	@Test

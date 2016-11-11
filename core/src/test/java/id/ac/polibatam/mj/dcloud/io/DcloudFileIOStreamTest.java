@@ -22,7 +22,7 @@ public class DcloudFileIOStreamTest {
 	public void ioDcloudFile() {
 
 		final File dcloudFile = new File("test.dc");
-		final String headerStr = "200201002105FF000A00002201402301802401FF";
+		final String headerStr = "200201002105FF000A00002201402301802401FF2510DB89BB5CEAB87F9C0FCC2AB36C189C2C";
 		final String contentStr = "01234567890123456789012345678901234567890123456789012345678901234567890123456789";
 
 		Throwable t1 = null;

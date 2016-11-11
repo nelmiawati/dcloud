@@ -24,6 +24,7 @@ import id.ac.polibatam.mj.dcloud.math.GFMatrix;
 import id.ac.polibatam.mj.dcloud.math.IDAMath;
 import id.ac.polibatam.mj.dcloud.util.ArrayUtils;
 import id.ac.polibatam.mj.dcloud.util.Converter;
+import id.ac.polibatam.mj.dcloud.util.FileUtils;
 
 /**
  *
@@ -82,6 +83,7 @@ public class FileDispersal {
 			throw new DcloudInvalidDataException(
 					"INVALID origFile, NONEXISTING origFile=[" + origFile.getAbsolutePath() + "]");
 		}
+		final byte[] origFileMd5 = FileUtils.getMd5(origFile);
 
 		if (!outputDir.exists()) {
 			outputDir.mkdirs();
@@ -115,6 +117,7 @@ public class FileDispersal {
 				header.setPaddLen(paddLen);
 				header.setThreshold(this.m);
 				header.setVSecretShare(Converter.convertUnsignedByteToSignedByte(unsignedSecretShares[i]));
+				header.setMd5(origFileMd5);
 
 				dispersedFiles[i] = new File(outputDir.getAbsolutePath().concat(File.separator)
 						.concat(origFile.getName()).concat(".").concat(Integer.toString(i)).concat(".dc"));
@@ -129,16 +132,17 @@ public class FileDispersal {
 			while (fis.read(buffReadByteColumn) > -1) {
 
 				this.gfMatrix.setColumn(buffRead, Converter.convertSignedByteToUnsignedByte(buffReadByteColumn), 0);
-				if (LOG.isTraceEnabled()) {
-					LOG.trace("buffRead=[" + Arrays.deepToString(buffRead) + "]");
-				}
+				// if (LOG.isTraceEnabled()) {
+				// LOG.trace("buffRead=[" + Arrays.deepToString(buffRead) +
+				// "]");
+				// }
 
 				int[][] buffWriteInt = null;
 				if (useSalt) {
 					final int[][] salt = IDAMath.generateSalt(random, this.m, 1);
-					if (LOG.isTraceEnabled()) {
-						LOG.trace("salt=[" + Arrays.deepToString(salt) + "]");
-					}
+					// if (LOG.isTraceEnabled()) {
+					// LOG.trace("salt=[" + Arrays.deepToString(salt) + "]");
+					// }
 					buffWriteInt = this.gfMatrix.multiply(this.mSecretKey, this.gfMatrix.add(buffRead, salt));
 				} else {
 					buffWriteInt = this.gfMatrix.multiply(this.mSecretKey, buffRead);

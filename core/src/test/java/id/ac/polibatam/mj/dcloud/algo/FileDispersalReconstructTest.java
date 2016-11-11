@@ -27,7 +27,11 @@ public class FileDispersalReconstructTest {
 
 	private String origFileName1 = "lipsum.txt";
 
+	private String origFileName2 = "github-mark.png";
+
 	private File origFile1 = null;
+
+	private File origFile2 = null;
 
 	private File outputDir = new File("out");
 
@@ -35,6 +39,7 @@ public class FileDispersalReconstructTest {
 	public void before() {
 
 		this.origFile1 = this.foundFile(origFileName1);
+		this.origFile2 = this.foundFile(origFileName2);
 
 		final Random random = new Random();
 		final int[] vSecretKeyUnsigned = new int[this.nbTarget];
@@ -49,7 +54,7 @@ public class FileDispersalReconstructTest {
 	private File foundFile(final String fileName) {
 
 		File file = null;
-		final URL url = ClassLoader.getSystemResource(origFileName1);
+		final URL url = ClassLoader.getSystemResource(fileName);
 		if (null == url) {
 			throw new DcloudInvalidConfigurationRuntimeException("file=[" + fileName + "] is NOT existing");
 		} else {
@@ -62,43 +67,48 @@ public class FileDispersalReconstructTest {
 	@After
 	public void after() {
 
+		for (File file : outputDir.listFiles()) {
+			file.delete();
+		}
+
+	}
+
+	private void disperseReconstruct (final File origFile, final boolean salt) {
+
+		Throwable t1 = null;
+		try {
+
+			final FileDispersal fileD = new FileDispersal(vSecretKey, threshold);
+			File[] dispersedFile = fileD.disperse(origFile, this.outputDir, salt);
+
+			final File reconFile = new File(
+					this.outputDir.getAbsolutePath().concat(File.separator).concat(origFile.getName()));
+
+			final FileReconstruct fileR = new FileReconstruct();
+
+			final File[] dispersedFileStar1 = new File[] { dispersedFile[3], dispersedFile[0], dispersedFile[4] };
+			fileR.reconstruct(dispersedFileStar1, reconFile, salt);
+
+			final File[] dispersedFileStar2 = new File[] { dispersedFile[0], dispersedFile[1], dispersedFile[2] };
+			fileR.reconstruct(dispersedFileStar2, reconFile, salt);
+
+			final File[] dispersedFileStar3 = new File[] { dispersedFile[4], dispersedFile[1], dispersedFile[2] };
+			fileR.reconstruct(dispersedFileStar3, reconFile, salt);
+
+		} catch (BaseDcloudException e) {
+			LOG.error(e.getMessage(), e);
+			t1 = e;
+		}
+		assertNull(t1);
+
 	}
 
 	@Test
 	public void testDisperseReconstructNoSalt() {
-
-		Throwable t1 = null;
-		try {
-			final FileDispersal fileD = new FileDispersal(vSecretKey, threshold);
-			File[] dispersedFile = fileD.disperse(this.origFile1, this.outputDir, false);
-
-			final File reconFile = new File(this.outputDir.getAbsolutePath().concat(File.separator).concat(origFileName1));
-			final File[] dispersedFileStar = new File[] { dispersedFile[3], dispersedFile[0], dispersedFile[4] };
-			final FileReconstruct fileR = new FileReconstruct();
-			fileR.reconstruct(dispersedFileStar, reconFile, false);
-
-		} catch (BaseDcloudException e) {
-			LOG.error(e.getMessage(), e);
-			t1 = e;
-		}
-		assertNull(t1);
-
-	}
-
-	@Test
-	public void testDisperseReconstructSalt() {
-
-		Throwable t1 = null;
-		try {
-			final FileDispersal fileD = new FileDispersal(vSecretKey, threshold);
-			@SuppressWarnings("unused")
-			File[] dispersedFile = fileD.disperse(this.origFile1, this.outputDir, true);
-		} catch (BaseDcloudException e) {
-			LOG.error(e.getMessage(), e);
-			t1 = e;
-		}
-		assertNull(t1);
-
+		this.disperseReconstruct(origFile1, false);
+		this.disperseReconstruct(origFile1, true);
+		this.disperseReconstruct(origFile2, false);
+		this.disperseReconstruct(origFile2, true);
 	}
 
 }

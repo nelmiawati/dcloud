@@ -27,6 +27,7 @@ import id.ac.polibatam.mj.dcloud.math.GFMatrix;
 import id.ac.polibatam.mj.dcloud.math.IDAMath;
 import id.ac.polibatam.mj.dcloud.util.ArrayUtils;
 import id.ac.polibatam.mj.dcloud.util.Converter;
+import id.ac.polibatam.mj.dcloud.util.FileUtils;
 
 /**
  *
@@ -53,6 +54,7 @@ public class FileReconstruct {
 			throw new DcloudInvalidDataException("nbDispersedFiles length has to be > 1");
 		}
 
+		byte[] origMd5 = null;
 		FileOutputStream fos = null;
 		final DcloudFileInputStream[] arDis = new DcloudFileInputStream[dispersedFiles.length];
 		try {
@@ -65,6 +67,7 @@ public class FileReconstruct {
 				arDis[i] = new DcloudFileInputStream(dispersedFiles[i]);
 			}
 
+			origMd5 = arDis[0].getHeader().getMd5();
 			final int[][] keys = this.validateDispersedFilesAndReconstructSecret(arDis);
 			final int[] vSecretKey = keys[0];
 			final int[] vSecretKeyStar = keys[1];
@@ -99,6 +102,10 @@ public class FileReconstruct {
 					if (useSalt) {
 						final int[][] bufferWriterSalt = this.gfMatrix.solveVandermondeSystemT(vSecretKeyStar, mRead);
 						final int[][] salt = IDAMath.generateSalt(random, arDis.length, 1);
+						// if (LOG.isTraceEnabled()) {
+						// LOG.trace("salt=[" + Arrays.deepToString(salt) +
+						// "]");
+						// }
 						mWrite = this.gfMatrix.substract(bufferWriterSalt, salt);
 					} else {
 						mWrite = this.gfMatrix.solveVandermondeSystemT(vSecretKeyStar, mRead);
@@ -158,6 +165,18 @@ public class FileReconstruct {
 
 		}
 
+		// verify md5 reconFile
+		final byte[] reconMd5 = FileUtils.getMd5(reconstructedFile);
+		if (LOG.isTraceEnabled()) {
+			LOG.trace("origMd5=[" + Converter.convertSignedByteToHexString(origMd5) + "]");
+			LOG.trace("reconMd5=[" + Converter.convertSignedByteToHexString(reconMd5) + "]");
+		}
+		if (!Arrays.equals(reconMd5, origMd5)) {
+			throw new DcloudInvalidDataException(
+					"INVALID dispersedFile, reconMd5=[" + Converter.convertSignedByteToHexString(reconMd5)
+							+ "] <> origMd5=[" + Converter.convertSignedByteToHexString(origMd5) + "]");
+		}
+
 	}
 
 	private int[][] validateDispersedFilesAndReconstructSecret(final DcloudFileInputStream[] arDis)
@@ -187,6 +206,12 @@ public class FileReconstruct {
 				throw new DcloudInvalidDataException(
 						"INVALID dispersedFiles[" + i + "]. padding=[" + header.getPaddLen()
 								+ "] different from padding0=[" + arDis[0].getHeader().getPaddLen() + "]");
+			}
+
+			if (!Arrays.equals(arDis[0].getHeader().getMd5(), header.getMd5())) {
+				throw new DcloudInvalidDataException("INVALID dispersedFiles[" + i + "]. md5=["
+						+ Converter.convertSignedByteToHexString(header.getMd5()) + "] different from md50=["
+						+ Converter.convertSignedByteToHexString(arDis[0].getHeader().getMd5()) + "]");
 			}
 
 			secretShares[i] = Converter.convertSignedByteToUnsignedByte(header.getVSecretShare());

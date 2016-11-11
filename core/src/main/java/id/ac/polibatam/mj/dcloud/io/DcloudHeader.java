@@ -30,7 +30,7 @@ public class DcloudHeader implements Serializable, Cloneable {
 	private static final byte[] DCLOUD_INDICATOR = { (byte) 0x64, (byte) 0x63, (byte) 0x6C, (byte) 0x6F, (byte) 0x75,
 			(byte) 0x64 };
 
-	public static final int HEADER_MAX_LEN = 270;
+	public static final int HEADER_MAX_LEN = 288;
 
 	private static final byte[] DCLOUD_VERSION = { (byte) 0x01, (byte) 0x00 };
 
@@ -46,10 +46,12 @@ public class DcloudHeader implements Serializable, Cloneable {
 
 	private static final int TAG_PADD_LEN_VALUE_MAX = 255;
 
+	private static final int TAG_MD5_LEN_VALUE = 16;
+
 	private enum HeaderTag {
 
-		TAG_DCLOUD_VERSION(0x20), TAG_V_SECRET_SHARE(0x21), TAG_DISPERSAL_IDX(0x22), TAG_THRESHOLD(0x23), TAG_PADDING_LEN(
-				0x24);
+		TAG_DCLOUD_VERSION(0x20), TAG_V_SECRET_SHARE(0x21), TAG_DISPERSAL_IDX(0x22), TAG_THRESHOLD(
+				0x23), TAG_PADDING_LEN(0x24), TAG_MD5(0x25);
 
 		private int tag;
 
@@ -81,6 +83,8 @@ public class DcloudHeader implements Serializable, Cloneable {
 	private int m = 0;
 
 	private int paddLen = 0;
+
+	private byte[] md5 = null;
 
 	public DcloudHeader() {
 	}
@@ -129,53 +133,13 @@ public class DcloudHeader implements Serializable, Cloneable {
 		this.validatePaddLen();
 	}
 
-	// public static DcloudHeader parseHeader(final byte[] header)
-	// throws DcloudInvalidDataException, DcloudSystemInternalException {
-	//
-	// if (null == header) {
-	// throw new DcloudInvalidDataException("INVALID header, null bytes");
-	// }
-	//
-	// byte[] headerElm = null;
-	// try {
-	//
-	// // Check header indicator
-	// final byte[] dcloudIndicatorByte = DCLOUD_INDICATOR.getBytes("UTF-8");
-	// if (!Arrays.equals(dcloudIndicatorByte, Arrays.copyOf(header,
-	// dcloudIndicatorByte.length))) {
-	// throw new DcloudInvalidDataException(
-	// "INVALID header, bytes not started with " +
-	// Arrays.toString(dcloudIndicatorByte));
-	// }
-	//
-	// // Get header length, next 2bytes after header indicator
-	// final byte[] headerLenByte = Arrays.copyOfRange(header,
-	// dcloudIndicatorByte.length, 2);
-	// final int headerLen =
-	// Integer.parseInt(Converter.convertSignedByteToHexString(headerLenByte),
-	// 16);
-	// if (header.length != (dcloudIndicatorByte.length + headerLenByte.length +
-	// headerLen)) {
-	// throw new DcloudInvalidDataException("INVALID header, unmatch header
-	// len=["
-	// + Converter.convertSignedByteToHexString(headerLenByte) + "]");
-	// }
-	//
-	// // Get header elements
-	// headerElm = Arrays.copyOf(header, dcloudIndicatorByte.length + 2);
-	//
-	// } catch (UnsupportedEncodingException e) {
-	// LOG.fatal(e.getMessage());
-	// throw new DcloudSystemInternalException(e.getMessage(), e);
-	// }
-	//
-	// LOG.trace("header=[" + Converter.convertSignedByteToHexString(header) +
-	// "]");
-	// LOG.trace("headerElm=[" +
-	// Converter.convertSignedByteToHexString(headerElm) + "]");
-	//
-	// return DcloudHeader.parseHeaderElm(headerElm);
-	// }
+	public byte[] getMd5() {
+		return this.md5;
+	}
+
+	public void setMd5(final byte[] md5) {
+		this.md5 = md5;
+	}
 
 	public static DcloudHeader parseHeader(final byte[] headerBytes) throws DcloudInvalidDataException {
 
@@ -243,6 +207,10 @@ public class DcloudHeader implements Serializable, Cloneable {
 					header.setPaddLen(paddLen);
 					break;
 				}
+				case TAG_MD5: {
+					header.setMd5(value);
+					break;
+				}
 				default:
 					if (LOG.isEnabledFor(Level.WARN)) {
 						LOG.warn("NO interpretation for tag=[" + tag + "]");
@@ -290,41 +258,26 @@ public class DcloudHeader implements Serializable, Cloneable {
 
 			// 3 bytes dispersal IDA index TLV
 			baos1.write(HeaderTag.TAG_DISPERSAL_IDX.getTag());
-			baos1.write(1);
+			baos1.write((byte) 0x01);
 			baos1.write(this.dispersalIdx);
 
 			// 3 bytes IDA threshold
 			baos1.write(HeaderTag.TAG_THRESHOLD.getTag());
-			baos1.write(1);
+			baos1.write((byte) 0x01);
 			baos1.write(this.m);
 
 			// 3 bytes padding len
 			baos1.write(HeaderTag.TAG_PADDING_LEN.getTag());
-			baos1.write(1);
+			baos1.write((byte) 0x01);
 			baos1.write(this.paddLen);
 
+			// 18 bytes md5
+			baos1.write(HeaderTag.TAG_MD5.getTag());
+			baos1.write(this.md5.length);
+			baos1.write(md5);
+
 			header = baos1.toByteArray();
-			// baos1.flush();
-			// baos1.reset();
-			// String headerElmLength = Integer.toString(headerElm.length, 16);
-			// while (headerElmLength.length() < 4) {
-			// headerElmLength = "0".concat(headerElmLength);
-			// }
-			//
-			// // dcoud indicator
-			// baos1.write(DCLOUD_INDICATOR.getBytes("UTF-8"));
-			//
-			// // 2 bytes headerElm len
-			// baos1.write(Converter.convertHexStringToSignedByte(headerElmLength));
-			//
-			// // header Elm
-			// baos1.write(headerElm);
-			//
-			// header = baos1.toByteArray();
-			//
-			// } catch (UnsupportedEncodingException e) {
-			// LOG.fatal(e.getMessage());
-			// throw new DcloudSystemInternalException(e.getMessage(), e);
+
 		} catch (IOException e) {
 			throw new DcloudSystemInternalException(e.getMessage(), e);
 		} finally {
@@ -352,6 +305,7 @@ public class DcloudHeader implements Serializable, Cloneable {
 		this.validateDispersalIdx();
 		this.validateThreshold();
 		this.validatePaddLen();
+		this.validateMd5();
 	}
 
 	private void validateVSecretShare() {
@@ -382,6 +336,15 @@ public class DcloudHeader implements Serializable, Cloneable {
 		}
 	}
 
+	private void validateMd5() {
+		if (null == this.md5) {
+			throw new DcloudInvalidDataRuntimeException("INVALID header, null md5");
+		}
+		if (md5.length != TAG_MD5_LEN_VALUE) {
+			throw new DcloudInvalidDataRuntimeException("INVALID header, md5 length is not " + TAG_MD5_LEN_VALUE);
+		}
+	}
+
 	@Override
 	public Object clone() {
 		final DcloudHeader clone = new DcloudHeader();
@@ -389,6 +352,7 @@ public class DcloudHeader implements Serializable, Cloneable {
 		clone.setDispersalIdx(this.dispersalIdx);
 		clone.setThreshold(this.m);
 		clone.setPaddLen(this.paddLen);
+		clone.setMd5(this.md5.clone());
 		return clone;
 	}
 
@@ -406,14 +370,14 @@ public class DcloudHeader implements Serializable, Cloneable {
 		}
 		DcloudHeader other = (DcloudHeader) o;
 
-		return Arrays.equals(this.vSecretShare, other.getVSecretShare())
-				&& this.dispersalIdx == other.getDispersalIdx() && this.m == other.getThreshold()
-				&& this.paddLen == other.getPaddLen();
+		return Arrays.equals(this.vSecretShare, other.getVSecretShare()) && this.dispersalIdx == other.getDispersalIdx()
+				&& this.m == other.getThreshold() && this.paddLen == other.getPaddLen()
+				&& Arrays.equals(this.md5, other.getMd5());
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(DCLOUD_VERSION, this.vSecretShare, this.dispersalIdx, this.m, this.paddLen);
+		return Objects.hashCode(DCLOUD_VERSION, this.vSecretShare, this.dispersalIdx, this.m, this.paddLen, this.md5);
 	}
 
 	@Override
@@ -421,7 +385,7 @@ public class DcloudHeader implements Serializable, Cloneable {
 		return MoreObjects.toStringHelper(this).add("version", Converter.convertSignedByteToHexString(DCLOUD_VERSION))
 				.add("vSecretKeyDist", Converter.convertSignedByteToHexString(this.vSecretShare))
 				.add("dispersalIdx", this.dispersalIdx).add("threshold", this.m).add("paddLen", this.paddLen)
-				.toString();
+				.add("md5", Converter.convertSignedByteToHexString(this.md5)).toString();
 	}
 
 	// public static void main(String[] args) throws Exception {
