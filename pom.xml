@@ -47,6 +47,9 @@
 		<commons-logging-version>1.1.2</commons-logging-version>
 		<commons-io-version>2.5</commons-io-version>
 
+		<!-- <dropbox-api-version>2.1.2</dropbox-api-version>-->
+		<dropbox-api-version>1.7.7</dropbox-api-version>
+
 		<guava-version>20.0</guava-version>
 
 		<log4j-version>1.2.17</log4j-version>
@@ -144,12 +147,19 @@
 				<type>jar</type>
 			</dependency>
 
-	<dependency>
-		<groupId>com.google.guava</groupId>
-		<artifactId>guava</artifactId>
-		<version>${guava-version}</version>
-		<type>jar</type>
-	</dependency>
+			<dependency>
+				<groupId>com.google.guava</groupId>
+				<artifactId>guava</artifactId>
+				<version>${guava-version}</version>
+				<type>jar</type>
+			</dependency>
+
+			<dependency>
+				<groupId>com.dropbox.core</groupId>
+				<artifactId>dropbox-core-sdk</artifactId>
+				<version>${dropbox-api-version}</version>
+				<type>jar</type>
+			</dependency>
 
 			<dependency>
 				<groupId>log4j</groupId>
