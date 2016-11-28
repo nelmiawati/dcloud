@@ -18,7 +18,7 @@ import com.dropbox.core.DbxRequestConfig;
 import com.dropbox.core.DbxWebAuthNoRedirect;
 import com.dropbox.core.DbxWriteMode;
 
-public class DropBoxClient {
+public class DropBoxClient1 {
 
 	private static final String DROP_BOX_APP_KEY = "9u1gvfptr5bcxu3";
 	private static final String DROP_BOX_APP_SECRET = "vlkkvfpzhtc3nau";
@@ -86,7 +86,7 @@ public class DropBoxClient {
 	}
 
 	public static void main(String[] args) throws IOException, DbxException {
-		DropBoxClient javaDropbox = new DropBoxClient();
+		DropBoxClient1 javaDropbox = new DropBoxClient1();
 		javaDropbox.authDropbox(DROP_BOX_APP_KEY, DROP_BOX_APP_SECRET);
 		System.out.println("Dropbox Size: " + javaDropbox.getDropboxSize() + " GB");
 		javaDropbox.uploadToDropbox("/home/arif/Documents/lab/gitclone/dcloud/core/src/main/resources/happy.png");
