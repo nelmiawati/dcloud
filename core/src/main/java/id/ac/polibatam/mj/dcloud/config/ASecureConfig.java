@@ -1,4 +1,4 @@
-package id.ac.polibatam.mj.dcloud.util;
+package id.ac.polibatam.mj.dcloud.config;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
@@ -13,6 +13,7 @@ import id.ac.polibatam.mj.dcloud.exception.DcloudSystemInternalException;
 import id.ac.polibatam.mj.dcloud.exception.runtime.DcloudInvalidConfigurationRuntimeException;
 import id.ac.polibatam.mj.dcloud.exception.runtime.DcloudInvalidDataRuntimeException;
 import id.ac.polibatam.mj.dcloud.exception.runtime.DcloudSystemInternalRuntimeException;
+import id.ac.polibatam.mj.dcloud.util.JCEKSKey;
 
 public abstract class ASecureConfig extends AConfig {
 
@@ -44,10 +45,19 @@ public abstract class ASecureConfig extends AConfig {
 	}
 
 	public String getString(final IParam param, final String pwd) {
+		return this.getString(null, param, pwd);
+	}
+
+	public String getString(final String prefix, final IParam param, final String pwd) {
 
 		String value = null;
 		try {
-			value = new String(this.keyStore.getSecretKey(param.getName(), pwd), "UTF-8");
+			if (StringUtils.isEmpty(prefix)) {
+				value = new String(this.keyStore.getSecretKey(param.getName(), pwd), "UTF-8");
+			} else {
+				value = new String(this.keyStore.getSecretKey(prefix.concat("-").concat(param.getName()), pwd),
+						"UTF-8");
+			}
 			if (StringUtils.isEmpty(value)) {
 				value = param.getDefaultValue();
 			}
@@ -56,11 +66,12 @@ public abstract class ASecureConfig extends AConfig {
 			boolean validPattern = matcher.find();
 			if (!validPattern) {
 				throw new DcloudInvalidConfigurationRuntimeException("INVALID configuration found at configFile=["
-						+ this.configFileURL + "], param=[" + param.getName() + "], actualValue=[" + value
-						+ "], expectedValuePattern=[" + param.getPattern() + "]");
+						+ this.configFileURL + "], prefix=[" + prefix + "], param=[" + param.getName()
+						+ "], actualValue=[" + value + "], expectedValuePattern=[" + param.getPattern() + "]");
 			} else {
 				if (LOG.isTraceEnabled()) {
-					LOG.trace("RETRIEVED configuration param=[" + param.getName() + "], actualValue=[" + value + "]");
+					LOG.trace("RETRIEVED configuration, prefix=[" + prefix + "], param=[" + param.getName()
+							+ "], actualValue=[" + value + "]");
 				}
 			}
 
@@ -74,25 +85,46 @@ public abstract class ASecureConfig extends AConfig {
 	}
 
 	public int getInt(final IParam param, final String pwd) {
+		return this.getInt(null, param, pwd);
+	}
+
+	public int getInt(final String prefix, final IParam param, final String pwd) {
 		return Integer.parseInt(this.getString(param, pwd));
 	}
 
 	public long getLong(final IParam param, final String pwd) {
+		return this.getLong(null, param, pwd);
+	}
+
+	public long getLong(final String prefix, final IParam param, final String pwd) {
 		return Long.parseLong(this.getString(param, pwd));
 	}
 
 	public boolean getBoolean(final IParam param, final String pwd) {
+		return this.getBoolean(null, param, pwd);
+	}
+
+	public boolean getBoolean(final String prefix, final IParam param, final String pwd) {
 		return Boolean.parseBoolean(this.getString(param, pwd));
 	}
 
 	public boolean setString(final IParam param, final String value, final String pwd) {
+		return this.setString(null, param, value, pwd);
+	}
+
+	public boolean setString(final String prefix, final IParam param, final String value, final String pwd) {
 
 		final Pattern pattern = Pattern.compile(param.getPattern());
 		final Matcher matcher = pattern.matcher(value.trim());
 		boolean validPattern = matcher.find();
 		if (validPattern) {
 			try {
-				this.keyStore.setSecretKey(param.getName(), value.getBytes("UTF-8"), pwd);
+				if (StringUtils.isEmpty(prefix)) {
+					this.keyStore.setSecretKey(param.getName(), value.getBytes("UTF-8"), pwd);
+				} else {
+					this.keyStore.setSecretKey(prefix.concat("-").concat(param.getName()), value.getBytes("UTF-8"),
+							pwd);
+				}
 			} catch (UnsupportedEncodingException e) {
 				throw new DcloudSystemInternalRuntimeException(e.getMessage(), e);
 			} catch (DcloudSystemInternalException e) {
@@ -102,4 +134,22 @@ public abstract class ASecureConfig extends AConfig {
 		return validPattern;
 	}
 
+	public boolean containsKey(final IParam param) {
+		return this.containsKey(null, param);
+	}
+
+	public boolean containsKey(final String prefix, final IParam param) {
+
+		boolean exist = false;
+		try {
+			if (StringUtils.isEmpty(prefix)) {
+				exist = this.keyStore.containsAlias(param.getName());
+			} else {
+				exist = this.keyStore.containsAlias(prefix.concat("-").concat(param.getName()));
+			}
+		} catch (DcloudSystemInternalException e) {
+			throw new DcloudSystemInternalRuntimeException(e.getMessage(), e);
+		}
+		return exist;
+	}
 }

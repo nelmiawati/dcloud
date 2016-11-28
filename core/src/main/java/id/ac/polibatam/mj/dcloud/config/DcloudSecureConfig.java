@@ -1,16 +1,6 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+package id.ac.polibatam.mj.dcloud.config;
 
-package id.ac.polibatam.mj.dcloud.util;
-
-/**
- *
- * @author mia
- */
-public class DcloudConfig extends APlainConfig {
+public class DcloudSecureConfig extends ASecureConfig {
 
 	public enum Param implements IParam {
 
@@ -44,15 +34,15 @@ public class DcloudConfig extends APlainConfig {
 
 	}
 
-	private static final String CONFIG_FILE_NAME = "dcloud-config.properties";
+	private static final String CONFIG_FILE_NAME = "dcloud-sconfig.jceks";
 	
-	private static final DcloudConfig CONFIG = new DcloudConfig();
+	private static final DcloudSecureConfig CONFIG = new DcloudSecureConfig();
 
-	private DcloudConfig() {
+	private DcloudSecureConfig() {
 		super.loadConfigProperties();
 	}
 
-	public static DcloudConfig getInstance() {
+	public static DcloudSecureConfig getInstance() {
 		return CONFIG;
 	}
 
@@ -61,4 +51,10 @@ public class DcloudConfig extends APlainConfig {
 		return CONFIG_FILE_NAME;
 	}
 
+
+	@Override
+	protected String getConfigFilePassword() {
+		return System.getProperty("sconfigPassword");
+	}
+	
 }
