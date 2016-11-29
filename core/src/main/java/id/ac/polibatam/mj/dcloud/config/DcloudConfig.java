@@ -14,8 +14,11 @@ public class DcloudConfig extends APlainConfig {
 
 	public enum Param implements IParam {
 
-		PARAM_STRING("param-string", "default-param-string@123", ".+"), 
-		PARAM_INTEGER("param-integer", "0123456789", "[0-9]"),;
+		DCLOUD_COUNT("dcloud-count", "5", "[0-9]"),
+		DCLOUD_THRESHOLD("dcloud-threshold", "5", "[0-9]"),
+		CLIENT("client", "id.ac.polibatam.mj.dcloud.io.UtopiaClient", ".+"), 
+		CREDENTIAL("credential", "utopia", ".+"),
+		;
 
 		private final String name;
 		private final String defaultValue;
