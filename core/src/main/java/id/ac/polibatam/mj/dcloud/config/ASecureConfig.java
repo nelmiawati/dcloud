@@ -1,10 +1,7 @@
 package id.ac.polibatam.mj.dcloud.config;
 
 import java.io.File;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -44,94 +41,40 @@ public abstract class ASecureConfig extends AConfig {
 		}
 	}
 
-	public String getString(final IParam param, final String pwd) {
-		return this.getString(null, param, pwd);
+	public byte[] getByte(final IParam param, final String pwd) {
+		return this.getByte(null, param, pwd);
 	}
 
-	public String getString(final String prefix, final IParam param, final String pwd) {
+	public byte[] getByte(final String prefix, final IParam param, final String pwd) {
 
-		String value = null;
+		byte[] value = null;
 		try {
 			if (StringUtils.isEmpty(prefix)) {
-				value = new String(this.keyStore.getSecretKey(param.getName(), pwd), "UTF-8");
+				value = this.keyStore.getSecretKey(param.getName(), pwd);
 			} else {
-				value = new String(this.keyStore.getSecretKey(prefix.concat("-").concat(param.getName()), pwd),
-						"UTF-8");
-			}
-			if (StringUtils.isEmpty(value)) {
-				value = param.getDefaultValue();
-			}
-			final Pattern pattern = Pattern.compile(param.getPattern());
-			final Matcher matcher = pattern.matcher(value.trim());
-			boolean validPattern = matcher.find();
-			if (!validPattern) {
-				throw new DcloudInvalidConfigurationRuntimeException("INVALID configuration found at configFile=["
-						+ this.configFileURL + "], prefix=[" + prefix + "], param=[" + param.getName()
-						+ "], actualValue=[" + value + "], expectedValuePattern=[" + param.getPattern() + "]");
-			} else {
-				if (LOG.isTraceEnabled()) {
-					LOG.trace("RETRIEVED configuration, prefix=[" + prefix + "], param=[" + param.getName()
-							+ "], actualValue=[" + value + "]");
-				}
+				value = this.keyStore.getSecretKey(prefix.concat("-").concat(param.getName()), pwd);
 			}
 
-		} catch (UnsupportedEncodingException e) {
-			throw new DcloudSystemInternalRuntimeException(e.getMessage(), e);
 		} catch (DcloudSystemInternalException e) {
 			throw new DcloudSystemInternalRuntimeException(e.getMessage(), e);
 		}
 
 		return value;
+
 	}
 
-	public int getInt(final IParam param, final String pwd) {
-		return this.getInt(null, param, pwd);
-	}
+	public void setByte(final String prefix, final IParam param, final byte[] value, final String pwd) {
 
-	public int getInt(final String prefix, final IParam param, final String pwd) {
-		return Integer.parseInt(this.getString(param, pwd));
-	}
-
-	public long getLong(final IParam param, final String pwd) {
-		return this.getLong(null, param, pwd);
-	}
-
-	public long getLong(final String prefix, final IParam param, final String pwd) {
-		return Long.parseLong(this.getString(param, pwd));
-	}
-
-	public boolean getBoolean(final IParam param, final String pwd) {
-		return this.getBoolean(null, param, pwd);
-	}
-
-	public boolean getBoolean(final String prefix, final IParam param, final String pwd) {
-		return Boolean.parseBoolean(this.getString(param, pwd));
-	}
-
-	public boolean setString(final IParam param, final String value, final String pwd) {
-		return this.setString(null, param, value, pwd);
-	}
-
-	public boolean setString(final String prefix, final IParam param, final String value, final String pwd) {
-
-		final Pattern pattern = Pattern.compile(param.getPattern());
-		final Matcher matcher = pattern.matcher(value.trim());
-		boolean validPattern = matcher.find();
-		if (validPattern) {
-			try {
-				if (StringUtils.isEmpty(prefix)) {
-					this.keyStore.setSecretKey(param.getName(), value.getBytes("UTF-8"), pwd);
-				} else {
-					this.keyStore.setSecretKey(prefix.concat("-").concat(param.getName()), value.getBytes("UTF-8"),
-							pwd);
-				}
-			} catch (UnsupportedEncodingException e) {
-				throw new DcloudSystemInternalRuntimeException(e.getMessage(), e);
-			} catch (DcloudSystemInternalException e) {
-				throw new DcloudSystemInternalRuntimeException(e.getMessage(), e);
+		try {
+			if (StringUtils.isEmpty(prefix)) {
+				this.keyStore.setSecretKey(param.getName(), value, pwd);
+			} else {
+				this.keyStore.setSecretKey(prefix.concat("-").concat(param.getName()), value, pwd);
 			}
+		} catch (DcloudSystemInternalException e) {
+			throw new DcloudSystemInternalRuntimeException(e.getMessage(), e);
 		}
-		return validPattern;
+
 	}
 
 	public boolean containsKey(final IParam param) {

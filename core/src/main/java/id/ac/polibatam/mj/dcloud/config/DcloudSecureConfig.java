@@ -4,17 +4,12 @@ public class DcloudSecureConfig extends ASecureConfig {
 
 	public enum Param implements IParam {
 
-		PARAM_STRING("param-string", "default-param-string@123", ".+"), 
-		PARAM_INTEGER("param-integer", "0123456789", "[0-9]"),;
+		DROPBOX_ACCESS_TOKEN("dropbox-access-token"),;
 
 		private final String name;
-		private final String defaultValue;
-		private final String pattern;
 
-		private Param(final String name, final String defaultValue, final String pattern) {
+		private Param(final String name) {
 			this.name = name;
-			this.defaultValue = defaultValue;
-			this.pattern = pattern;
 		}
 
 		@Override
@@ -24,18 +19,18 @@ public class DcloudSecureConfig extends ASecureConfig {
 
 		@Override
 		public String getDefaultValue() {
-			return this.defaultValue;
+			return null;
 		}
 
 		@Override
 		public String getPattern() {
-			return this.pattern;
+			return null;
 		}
 
 	}
 
 	private static final String CONFIG_FILE_NAME = "dcloud-sconfig.jceks";
-	
+
 	private static final DcloudSecureConfig CONFIG = new DcloudSecureConfig();
 
 	private DcloudSecureConfig() {
@@ -51,10 +46,9 @@ public class DcloudSecureConfig extends ASecureConfig {
 		return CONFIG_FILE_NAME;
 	}
 
-
 	@Override
 	protected String getConfigFilePassword() {
 		return System.getProperty("sconfigPassword");
 	}
-	
+
 }

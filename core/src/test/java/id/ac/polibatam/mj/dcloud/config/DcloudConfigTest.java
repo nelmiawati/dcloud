@@ -31,6 +31,7 @@ public class DcloudConfigTest {
 
 	@Test
 	public void testConfig() {
+		
 
 		final DcloudConfig config = DcloudConfig.getInstance();
 		for (DcloudConfig.Param param : DcloudConfig.Param.values()) {
