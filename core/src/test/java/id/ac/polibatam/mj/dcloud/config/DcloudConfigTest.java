@@ -5,13 +5,14 @@
  */
 package id.ac.polibatam.mj.dcloud.config;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import id.ac.polibatam.mj.dcloud.config.DcloudConfig;
+import id.ac.polibatam.mj.dcloud.config.DcloudConfig.Param;
 
 /**
  *
@@ -31,12 +32,14 @@ public class DcloudConfigTest {
 
 	@Test
 	public void testConfig() {
-		
 
 		final DcloudConfig config = DcloudConfig.getInstance();
-		for (DcloudConfig.Param param : DcloudConfig.Param.values()) {
-			Assert.assertFalse(param.getDefaultValue().equals(config.getString(param)));
-		}
+		assertFalse(Param.DCLOUD_COUNT.getDefaultValue().equals(config.getString(Param.DCLOUD_COUNT)));
+		assertFalse(Param.DCLOUD_THRESHOLD.getDefaultValue().equals(config.getString(Param.DCLOUD_THRESHOLD)));
+		assertFalse(Param.CLIENT.getDefaultValue().equals(config.getString("dcloud1", Param.CLIENT)));
+		assertFalse(Param.CREDENTIAL.getDefaultValue().equals(config.getString("dcloud1", Param.CREDENTIAL)));
+		assertTrue(Param.CLIENT.getDefaultValue().equals(config.getString("dcloud99", Param.CLIENT)));
+		assertTrue(Param.CREDENTIAL.getDefaultValue().equals(config.getString("dcloud99", Param.CREDENTIAL)));
 
 	}
 

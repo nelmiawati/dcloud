@@ -14,8 +14,8 @@ public class DcloudConfig extends APlainConfig {
 
 	public enum Param implements IParam {
 
-		DCLOUD_COUNT("dcloud-count", "5", "[0-9]"),
-		DCLOUD_THRESHOLD("dcloud-threshold", "5", "[0-9]"),
+		DCLOUD_COUNT("dcloud-count", "4", "[0-9]"),
+		DCLOUD_THRESHOLD("dcloud-threshold", "2", "[0-9]"),
 		CLIENT("client", "id.ac.polibatam.mj.dcloud.io.UtopiaClient", ".+"), 
 		CREDENTIAL("credential", "utopia", ".+"),
 		;

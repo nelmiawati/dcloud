@@ -27,7 +27,7 @@ public class JCEKSKeyTest {
 	// --------------------------------------------------------------------------
 	private static final Logger LOG = Logger.getLogger(JCEKSKeyTest.class);
 
-	private static final String KEYSTORE_FILE_NAME = "dcloud-keystore.jceks";
+	private static final String KEYSTORE_FILE_NAME = "keystore.jceks";
 
 	private static final String KEYSTORE_PASSWORD = "keystore123";
 
