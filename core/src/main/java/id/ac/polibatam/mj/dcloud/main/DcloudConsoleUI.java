@@ -5,28 +5,28 @@ package id.ac.polibatam.mj.dcloud.main;
 
 import java.util.Arrays;
 
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 /**
  * @author mia
  *
  */
-public final class DcloudUpload {
+public final class DcloudConsoleUI {
 
-	private static final Logger LOG = Logger.getLogger(DcloudUpload.class);
+	private static final Logger LOG = Logger.getLogger(DcloudConsoleUI.class);
 
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+
+
+
 		if (LOG.isTraceEnabled()) {
 			LOG.trace("args=[" + Arrays.toString(args) + "]");
 		}
-		if (LOG.isEnabledFor(Level.WARN)) {
-			LOG.warn(DcloudDownload.class + ": NOT IMPLEMENTED");
-		}
+
 	}
+
 
 }
