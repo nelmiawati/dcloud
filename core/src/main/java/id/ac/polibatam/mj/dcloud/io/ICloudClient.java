@@ -1,17 +1,22 @@
 package id.ac.polibatam.mj.dcloud.io;
 
 import java.io.File;
+import java.util.Map;
 
 import id.ac.polibatam.mj.dcloud.exception.BaseDcloudException;
 
 public interface ICloudClient {
 
-	void upload(final File file) throws BaseDcloudException;
+	public enum FileType {
+		FILE, DIRECTORY, UNKNOWN;
+	}
 
-	void download(final File file);
+	void upload(final File file, final String destination) throws BaseDcloudException;
 
-	void delete(final File file);
+	void download(final File file) throws BaseDcloudException;
 
-	void list(final File dir);
+	void delete(final String fileName) throws BaseDcloudException;
+
+	Map<String, FileType> list(final String dir) throws BaseDcloudException;
 
 }

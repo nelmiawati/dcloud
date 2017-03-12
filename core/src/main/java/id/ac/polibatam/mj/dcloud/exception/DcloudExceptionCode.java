@@ -11,6 +11,7 @@ public enum DcloudExceptionCode {
     INVALID_DATA_EXCEPTION("DCERR-1001"),
     INVALID_CONFIGURATION_EXCEPTION("DCERR-1002"),    
     SYSTEM_INTERNAL_EXCEPTION("DCERR-1003"),
+    SYSTEM_EXTERNAL_EXCEPTION("DCERR-1004"),
     ;
     
     private String code = null;
