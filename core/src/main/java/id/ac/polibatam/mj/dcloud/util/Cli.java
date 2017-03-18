@@ -90,7 +90,7 @@ public final class Cli {
 			final CommandLine cl = clParser.parse(optsMain, this.args);
 			Option[] opts = cl.getOptions();
 			if (opts.length != 1) {
-				this.helpFormatter.printHelp("java", optsMain);
+				this.helpFormatter.printHelp(" ", optsMain);
 			} else {
 				final Command cmd = Command.getCommand(opts[0].getOpt());
 				final List<String> args = opts[0].getValuesList();
@@ -131,7 +131,7 @@ public final class Cli {
 
 		} catch (ParseException e) {
 			LOG.warn(e.getMessage());
-			helpFormatter.printHelp("java", optsMain);
+			helpFormatter.printHelp(" ", optsMain);
 		}
 	}
 
@@ -142,39 +142,44 @@ public final class Cli {
 
 	private void execHelp(final String arg) {
 		if (StringUtils.isEmpty(arg)) {
-			helpFormatter.printHelp("java", this.buildOptsMain());
+			this.helpFormatter.printHelp(" ", this.buildOptsMain());
 		} else {
 			final Command cmd = Command.getCommand(arg);
 			if (LOG.isTraceEnabled()) {
 				LOG.trace(cmd);
 			}
 			if (null == cmd) {
-				helpFormatter.printHelp("java", this.buildOptsMain());
+				this.helpFormatter.printHelp(" ", this.buildOptsMain());
 			} else {
 
 				switch (cmd) {
 				case UPLOAD: {
-					helpFormatter.printHelp("java", this.buildOptsUpload());
+					this.helpFormatter.printHelp("-" + Command.UPLOAD.shortCmd + "," + "--" + Command.UPLOAD.longCmd,
+							this.buildOptsUpload());
 					break;
 
 				}
 				case DOWNLOAD: {
-					helpFormatter.printHelp("java", this.buildOptsDownload());
+					this.helpFormatter.printHelp("-" + Command.DOWNLOAD.shortCmd + "," + "--" + Command.DOWNLOAD.longCmd,
+							this.buildOptsDownload());
 					break;
 
 				}
 				case LIST: {
-					helpFormatter.printHelp("java", this.buildOptsList());
+					this.helpFormatter.printHelp("-" + Command.LIST.shortCmd + "," + "--" + Command.LIST.longCmd,
+							this.buildOptsList());
 					break;
 
 				}
 				case REMOVE: {
-					helpFormatter.printHelp("java", this.buildOpsRemove());
+					this.helpFormatter.printHelp("-" + Command.REMOVE.shortCmd + "," + "--" + Command.REMOVE.longCmd,
+							this.buildOptsRemove());
 					break;
 
 				}
 				default: {
-					helpFormatter.printHelp("java", this.buildOptsMain());
+					this.helpFormatter.printHelp(" ",
+							this.buildOptsMain());
 				}
 				}
 			}
@@ -225,14 +230,15 @@ public final class Cli {
 
 		final Options opts = new Options();
 
-		final Option optUpload = new Option(Command.UPLOAD.getShortCmd(), Command.UPLOAD.getLongCmd(), false,
-				"Upload a file from local workspace to remote cloud.");
-		optUpload.setRequired(true);
-		opts.addOption(optUpload);
+		// final Option optUpload = new Option(Command.UPLOAD.getShortCmd(),
+		// Command.UPLOAD.getLongCmd(), false,
+		// "Upload a file from local workspace to remote cloud.");
+		// optUpload.setRequired(true);
+		// opts.addOption(optUpload);
 
 		final Option optFromLocal = new Option(Command.FROM_LOCAL.getShortCmd(), Command.FROM_LOCAL.getLongCmd(), true,
 				"The full path local file at the workspace to be uploaded from.");
-		optUpload.setRequired(true);
+		optFromLocal.setRequired(true);
 		opts.addOption(optFromLocal);
 
 		final Option optToRemote = new Option(Command.TO_REMOTE.getShortCmd(), Command.TO_REMOTE.getLongCmd(), true,
@@ -257,10 +263,11 @@ public final class Cli {
 
 		final Options opts = new Options();
 
-		final Option optDownload = new Option(Command.DOWNLOAD.getShortCmd(), Command.DOWNLOAD.getLongCmd(), false,
-				"Download a file from remote cloud to local workspace.");
-		optDownload.setRequired(true);
-		opts.addOption(optDownload);
+		// final Option optDownload = new Option(Command.DOWNLOAD.getShortCmd(),
+		// Command.DOWNLOAD.getLongCmd(), false,
+		// "Download a file from remote cloud to local workspace.");
+		// optDownload.setRequired(true);
+		// opts.addOption(optDownload);
 
 		final Option optFromRemote = new Option(Command.FROM_REMOTE.getShortCmd(), Command.FROM_REMOTE.getLongCmd(),
 				true, "The full path remote file at the cloud to be downloaded from.");
@@ -289,10 +296,12 @@ public final class Cli {
 
 		final Options opts = new Options();
 
-		final Option optList = new Option(Command.LIST.getShortCmd(), Command.LIST.getLongCmd(), true,
-				"List of files/directories inside a directory of the cloud. Argument is a directory at the cloud to be listed its contents.");
-		optList.setRequired(true);
-		opts.addOption(optList);
+		// final Option optList = new Option(Command.LIST.getShortCmd(),
+		// Command.LIST.getLongCmd(), true,
+		// "List of files/directories inside a directory of the cloud. Argument
+		// is a directory at the cloud to be listed its contents.");
+		// optList.setRequired(true);
+		// opts.addOption(optList);
 
 		final Option optStorePass = new Option(Command.STORE_PASS.getShortCmd(), Command.STORE_PASS.getLongCmd(), true,
 				"Passphrase to access the keystore file.");
@@ -307,14 +316,16 @@ public final class Cli {
 		return opts;
 	}
 
-	private Options buildOpsRemove() {
+	private Options buildOptsRemove() {
 
 		final Options opts = new Options();
 
-		final Option optRemove = new Option(Command.REMOVE.getShortCmd(), Command.REMOVE.getLongCmd(), true,
-				"Remove a file at the cloud. Argument is full path of the file to be removed from the cloud.");
-		optRemove.setRequired(true);
-		opts.addOption(optRemove);
+		// final Option optRemove = new Option(Command.REMOVE.getShortCmd(),
+		// Command.REMOVE.getLongCmd(), true,
+		// "Remove a file at the cloud. Argument is full path of the file to be
+		// removed from the cloud.");
+		// optRemove.setRequired(true);
+		// opts.addOption(optRemove);
 
 		final Option optStorePass = new Option(Command.STORE_PASS.getShortCmd(), Command.STORE_PASS.getLongCmd(), true,
 				"Passphrase to access the keystore file.");
