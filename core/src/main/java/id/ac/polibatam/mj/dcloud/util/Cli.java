@@ -5,6 +5,7 @@ package id.ac.polibatam.mj.dcloud.util;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.cli.CommandLine;
@@ -15,6 +16,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 /**
@@ -24,7 +26,7 @@ import org.apache.log4j.Logger;
 public final class Cli {
 
 	private static final Logger LOG = Logger.getLogger(Cli.class);
-	private static final String DCLOUD_VERSION = "dCLOUD v1.0";
+	private static final String DCLOUD_VERSION = ":: dCLOUD v1.0 :: miarifSOFT :: copyright (r) 2017";
 
 	private static enum Command {
 
@@ -34,13 +36,14 @@ public final class Cli {
 								"storePass"), KEY_PASS("kp", "keyPass"), HELP("h", "help"), VERSION("v", "version"),;
 
 		private static Map<String, Command> MAP_OPT_ENUM = new HashMap<String, Command>();
-		
+
 		static {
-			for (Command cmd: Command.values()) {
+			for (Command cmd : Command.values()) {
 				MAP_OPT_ENUM.put(cmd.shortCmd, cmd);
+				MAP_OPT_ENUM.put(cmd.longCmd, cmd);
 			}
 		}
-		
+
 		private String shortCmd;
 		private String longCmd;
 
@@ -56,7 +59,7 @@ public final class Cli {
 		public String getLongCmd() {
 			return this.longCmd;
 		}
-		
+
 		public static Command getCommand(final String opt) {
 			return MAP_OPT_ENUM.get(opt);
 		}
@@ -81,35 +84,103 @@ public final class Cli {
 	}
 
 	public void exec() {
-		final Options options = this.buildOptsMain();
+		final Options optsMain = this.buildOptsMain();
 
 		try {
-			final CommandLine cl = clParser.parse(options, this.args);
+			final CommandLine cl = clParser.parse(optsMain, this.args);
 			Option[] opts = cl.getOptions();
 			if (opts.length != 1) {
-				helpFormatter.printHelp("java", options);
+				this.helpFormatter.printHelp("java", optsMain);
 			} else {
 				final Command cmd = Command.getCommand(opts[0].getOpt());
+				final List<String> args = opts[0].getValuesList();
 				if (LOG.isTraceEnabled()) {
 					LOG.trace(cmd);
+					LOG.trace(";" + opts[0].getValueSeparator() + ";");
+					LOG.trace(opts[0].getArgs());
+					LOG.trace(args);
+				}
+
+				switch (cmd) {
+				case UPLOAD: {
+					break;
+
+				}
+				case DOWNLOAD: {
+					break;
+
+				}
+				case LIST: {
+					break;
+
+				}
+				case REMOVE: {
+					break;
+
+				}
+				case VERSION: {
+					this.execVersion();
+					break;
+
+				}
+				default: {
+					this.execHelp(args.size() == 0 ? null : args.get(0));
+				}
 				}
 			}
 
 		} catch (ParseException e) {
 			LOG.warn(e.getMessage());
-			helpFormatter.printHelp("java", options);
+			helpFormatter.printHelp("java", optsMain);
 		}
 	}
 
 	public static void main(String[] args) {
-		Cli cli = new Cli(new String[] { "--version1", "version" });
+		Cli cli = new Cli(new String[] { "--help", "dl" });
 		cli.exec();
 	}
-	
-	private void execHelp() {
-		
+
+	private void execHelp(final String arg) {
+		if (StringUtils.isEmpty(arg)) {
+			helpFormatter.printHelp("java", this.buildOptsMain());
+		} else {
+			final Command cmd = Command.getCommand(arg);
+			if (LOG.isTraceEnabled()) {
+				LOG.trace(cmd);
+			}
+			if (null == cmd) {
+				helpFormatter.printHelp("java", this.buildOptsMain());
+			} else {
+
+				switch (cmd) {
+				case UPLOAD: {
+					helpFormatter.printHelp("java", this.buildOptsUpload());
+					break;
+
+				}
+				case DOWNLOAD: {
+					helpFormatter.printHelp("java", this.buildOptsDownload());
+					break;
+
+				}
+				case LIST: {
+					helpFormatter.printHelp("java", this.buildOptsList());
+					break;
+
+				}
+				case REMOVE: {
+					helpFormatter.printHelp("java", this.buildOpsRemove());
+					break;
+
+				}
+				default: {
+					helpFormatter.printHelp("java", this.buildOptsMain());
+				}
+				}
+			}
+		}
 	}
-	
+
 	private void execVersion() {
 		System.out.println(DCLOUD_VERSION);
 	}
@@ -120,7 +191,7 @@ public final class Cli {
 		final OptionGroup optsG = new OptionGroup();
 
 		final Option optUpload = new Option(Command.UPLOAD.getShortCmd(), Command.UPLOAD.getLongCmd(), false,
-				"Uupload a file from local workspace to remote cloud.");
+				"Upload a file from local workspace to remote cloud.");
 		optsG.addOption(optUpload);
 
 		final Option optDownload = new Option(Command.DOWNLOAD.getShortCmd(), Command.DOWNLOAD.getLongCmd(), false,
@@ -214,7 +285,7 @@ public final class Cli {
 		return opts;
 	}
 
-	private Options buildOptionsList() {
+	private Options buildOptsList() {
 
 		final Options opts = new Options();
 
@@ -236,7 +307,7 @@ public final class Cli {
 		return opts;
 	}
 
-	private Options buildOptionsRemove() {
+	private Options buildOpsRemove() {
 
 		final Options opts = new Options();
 
