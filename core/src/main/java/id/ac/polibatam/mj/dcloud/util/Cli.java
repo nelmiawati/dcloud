@@ -30,10 +30,54 @@ public final class Cli {
 
 	private static enum Command {
 
-		UPLOAD("ul", "upload"), DOWNLOAD("dl", "download"), LIST("ls", "list"), REMOVE("rm", "remove"), FROM_LOCAL("fl",
-				"fromLocal"), TO_REMOTE("tr", "toRemote"), FROM_REMOTE("fr", "fromRemote"), TO_LOCAL("tl",
-						"toLocal"), STORE_PASS("sp",
-								"storePass"), KEY_PASS("kp", "keyPass"), HELP("h", "help"), VERSION("v", "version"),;
+		/**
+		 * 
+		 */
+		UPLOAD("ul", "upload", "Upload a file from local workspace to remote cloud."),
+		/**
+		 * 
+		 */
+		DOWNLOAD("dl", "download", "Download a file from remote cloud to local workspace."),
+		/**
+		 * 
+		 */
+		LIST("ls", "list", "List of files/directories inside a directory of the cloud. Argument is a directory at the cloud to be listed its contents."),
+		/**
+		 * 
+		 */
+		REMOVE("rm", "remove", "Remove a file at the cloud. Argument is full path of the file to be removed from the cloud."),
+		/**
+		 * 
+		 */
+		FROM_LOCAL("fl", "fromLocal", "The full path local file at the workspace to be uploaded from."),
+		/**
+		 * 
+		 */
+		TO_REMOTE("tr", "toRemote", "The full path remote file at the cloud of the uploaded file to be saved into."),
+		/**
+		 * 
+		 */
+		FROM_REMOTE("fr", "fromRemote", "The full path remote file at the cloud to be downloaded from."),
+		/**
+		 * 
+		 */
+		TO_LOCAL("tl", "toLocal", "The full path local file at the workspace of the downloaded file to be saved into."),
+		/**
+		 * 
+		 */
+		STORE_PASS("sp", "storePass", "Passphrase to access the keystore file."),
+		/**
+		 * 		
+		 */
+		KEY_PASS("kp", "keyPass", "Passphrase to access key inside the keystore file."),
+		/**
+		 * 
+		 */
+		HELP("h", "help", "Help with commands used at dCLOUD."),
+		/**
+		 * 
+		 */
+		VERSION("v", "version", "Print dCLOUD version."),;
 
 		private static Map<String, Command> MAP_OPT_ENUM = new HashMap<String, Command>();
 
@@ -46,10 +90,12 @@ public final class Cli {
 
 		private String shortCmd;
 		private String longCmd;
+		private String desc;
 
-		private Command(final String shortCmd, final String longCmd) {
+		private Command(final String shortCmd, final String longCmd, final String desc) {
 			this.shortCmd = shortCmd;
 			this.longCmd = longCmd;
+			this.desc = desc;
 		}
 
 		public String getShortCmd() {
@@ -58,6 +104,10 @@ public final class Cli {
 
 		public String getLongCmd() {
 			return this.longCmd;
+		}
+
+		public String getDesc() {
+			return this.desc;
 		}
 
 		public static Command getCommand(final String opt) {
@@ -90,15 +140,15 @@ public final class Cli {
 			final CommandLine cl = clParser.parse(optsMain, this.args);
 			Option[] opts = cl.getOptions();
 			if (opts.length != 1) {
-				this.helpFormatter.printHelp(" ", optsMain);
+				this.printMainHelp();
 			} else {
 				final Command cmd = Command.getCommand(opts[0].getOpt());
 				final List<String> args = opts[0].getValuesList();
 				if (LOG.isTraceEnabled()) {
-					LOG.trace(cmd);
-					LOG.trace(";" + opts[0].getValueSeparator() + ";");
-					LOG.trace(opts[0].getArgs());
-					LOG.trace(args);
+					LOG.trace("cmd=[" + cmd + "]");
+					LOG.trace("cmdValSeparator=[" + opts[0].getValueSeparator() + "]");
+					LOG.trace("cmdNbParams=[" + opts[0].getArgs() + "]");
+					LOG.trace("cmdParams=[" + args + "]");
 				}
 
 				switch (cmd) {
@@ -124,14 +174,18 @@ public final class Cli {
 
 				}
 				default: {
-					this.execHelp(args.size() == 0 ? null : args.get(0));
+					if (args.size() != 1) {
+						this.printMainHelp();
+					} else {
+						this.execHelp(args.get(0));
+					}
 				}
 				}
 			}
 
 		} catch (ParseException e) {
 			LOG.warn(e.getMessage());
-			helpFormatter.printHelp(" ", optsMain);
+			this.printMainHelp();
 		}
 	}
 
@@ -140,46 +194,63 @@ public final class Cli {
 		cli.exec();
 	}
 
+	private void printMainHelp() {
+		helpFormatter.printHelp(
+				"Following are available commands on dCLOUD. To get details for each of command, type -h <command> or --help <command>",
+				this.buildOptsMain());
+	}
+
 	private void execHelp(final String arg) {
 		if (StringUtils.isEmpty(arg)) {
-			this.helpFormatter.printHelp(" ", this.buildOptsMain());
+			this.printMainHelp();
 		} else {
 			final Command cmd = Command.getCommand(arg);
 			if (LOG.isTraceEnabled()) {
-				LOG.trace(cmd);
+				LOG.trace("cmd=[" + cmd + "]");
 			}
 			if (null == cmd) {
-				this.helpFormatter.printHelp(" ", this.buildOptsMain());
+				this.printMainHelp();
 			} else {
 
 				switch (cmd) {
 				case UPLOAD: {
-					this.helpFormatter.printHelp("-" + Command.UPLOAD.shortCmd + "," + "--" + Command.UPLOAD.longCmd,
-							this.buildOptsUpload());
+					this.helpFormatter.printHelp("-" + Command.UPLOAD.shortCmd + "," + "--" + Command.UPLOAD.longCmd
+							+ "; " + Command.UPLOAD.getDesc() + " Following are parameters for this command: ", this.buildOptsUpload());
 					break;
 
 				}
 				case DOWNLOAD: {
-					this.helpFormatter.printHelp("-" + Command.DOWNLOAD.shortCmd + "," + "--" + Command.DOWNLOAD.longCmd,
-							this.buildOptsDownload());
+					this.helpFormatter.printHelp("-" + Command.DOWNLOAD.shortCmd + "," + "--" + Command.DOWNLOAD.longCmd
+							+ "; " + Command.DOWNLOAD.getDesc() + " Following are parameters for this command: ", this.buildOptsDownload());
 					break;
 
 				}
 				case LIST: {
-					this.helpFormatter.printHelp("-" + Command.LIST.shortCmd + "," + "--" + Command.LIST.longCmd,
-							this.buildOptsList());
+					this.helpFormatter.printHelp("-" + Command.LIST.shortCmd + "," + "--" + Command.LIST.longCmd + "; "
+							+ Command.LIST.getDesc() + " Following are parameters for this command: ", this.buildOptsList());
 					break;
 
 				}
 				case REMOVE: {
-					this.helpFormatter.printHelp("-" + Command.REMOVE.shortCmd + "," + "--" + Command.REMOVE.longCmd,
-							this.buildOptsRemove());
+					this.helpFormatter.printHelp("-" + Command.REMOVE.shortCmd + "," + "--" + Command.REMOVE.longCmd
+							+ "; " + Command.REMOVE.getDesc() + " Following are parameters for this command: ", this.buildOptsRemove());
+					break;
+
+				}
+				case HELP: {
+					this.helpFormatter.printHelp("-" + Command.REMOVE.shortCmd + "," + "--" + Command.REMOVE.longCmd
+							+ "; " + Command.HELP.desc + " Following are parameters for this command: ", new Options());
+					break;
+
+				}
+				case VERSION: {
+					this.helpFormatter.printHelp("-" + Command.VERSION.shortCmd + "," + "--" + Command.VERSION.longCmd
+							+ "; " + Command.VERSION.getDesc() + " Following are parameters for this command: ", new Options());
 					break;
 
 				}
 				default: {
-					this.helpFormatter.printHelp(" ",
-							this.buildOptsMain());
+					this.printMainHelp();
 				}
 				}
 			}
@@ -196,28 +267,28 @@ public final class Cli {
 		final OptionGroup optsG = new OptionGroup();
 
 		final Option optUpload = new Option(Command.UPLOAD.getShortCmd(), Command.UPLOAD.getLongCmd(), false,
-				"Upload a file from local workspace to remote cloud.");
+				Command.UPLOAD.getDesc());
 		optsG.addOption(optUpload);
 
 		final Option optDownload = new Option(Command.DOWNLOAD.getShortCmd(), Command.DOWNLOAD.getLongCmd(), false,
-				"Download a file from remote cloud to local workspace.");
+				Command.DOWNLOAD.getDesc());
 		optsG.addOption(optDownload);
 
 		final Option optList = new Option(Command.LIST.getShortCmd(), Command.LIST.getLongCmd(), true,
-				"List of files/directories inside a directory of the cloud. Argument is a directory at the cloud to be listed its contents.");
+				Command.LIST.getDesc());
 		optsG.addOption(optList);
 
 		final Option optRemove = new Option(Command.REMOVE.getShortCmd(), Command.REMOVE.getLongCmd(), true,
-				"Remove a file at the cloud. Argument is full path of the file to be removed from the cloud.");
+				Command.REMOVE.desc);
 		optsG.addOption(optRemove);
 
 		final Option optHelp = new Option(Command.HELP.getShortCmd(), Command.HELP.getLongCmd(), true,
-				"Help with commands used at dCLOUD.");
+				Command.HELP.getDesc());
 		optHelp.setOptionalArg(true);
 		optsG.addOption(optHelp);
 
 		final Option optVersion = new Option(Command.VERSION.getShortCmd(), Command.VERSION.getLongCmd(), false,
-				"Print dCLOUD version");
+				Command.VERSION.getDesc());
 		optsG.addOption(optVersion);
 
 		optsG.setRequired(true);
@@ -237,22 +308,22 @@ public final class Cli {
 		// opts.addOption(optUpload);
 
 		final Option optFromLocal = new Option(Command.FROM_LOCAL.getShortCmd(), Command.FROM_LOCAL.getLongCmd(), true,
-				"The full path local file at the workspace to be uploaded from.");
+				Command.FROM_LOCAL.getDesc());
 		optFromLocal.setRequired(true);
 		opts.addOption(optFromLocal);
 
 		final Option optToRemote = new Option(Command.TO_REMOTE.getShortCmd(), Command.TO_REMOTE.getLongCmd(), true,
-				"The full path remote file at the cloud of the uploaded file to be saved into.");
+				Command.TO_REMOTE.getDesc());
 		optToRemote.setRequired(true);
 		opts.addOption(optToRemote);
 
 		final Option optStorePass = new Option(Command.STORE_PASS.getShortCmd(), Command.STORE_PASS.getLongCmd(), true,
-				"Passphrase to access the keystore file.");
+				Command.STORE_PASS.getDesc());
 		optStorePass.setRequired(false);
 		opts.addOption(optStorePass);
 
 		final Option optKeyPass = new Option(Command.KEY_PASS.getShortCmd(), Command.KEY_PASS.getLongCmd(), true,
-				"Passphrase to access key inside the keystore file.");
+				Command.KEY_PASS.getDesc());
 		optKeyPass.setRequired(false);
 		opts.addOption(optKeyPass);
 
@@ -270,22 +341,22 @@ public final class Cli {
 		// opts.addOption(optDownload);
 
 		final Option optFromRemote = new Option(Command.FROM_REMOTE.getShortCmd(), Command.FROM_REMOTE.getLongCmd(),
-				true, "The full path remote file at the cloud to be downloaded from.");
+				true, Command.FROM_REMOTE.getDesc());
 		optFromRemote.setRequired(true);
 		opts.addOption(optFromRemote);
 
 		final Option optToLocal = new Option(Command.TO_LOCAL.getShortCmd(), Command.TO_LOCAL.getLongCmd(), true,
-				"The full path local file at the workspace of the downloaded file to be saved into.");
+				Command.TO_LOCAL.getDesc());
 		optToLocal.setRequired(true);
 		opts.addOption(optToLocal);
 
 		final Option optStorePass = new Option(Command.STORE_PASS.getShortCmd(), Command.STORE_PASS.getLongCmd(), true,
-				"Passphrase to access the keystore file.");
+				Command.STORE_PASS.getDesc());
 		optStorePass.setRequired(false);
 		opts.addOption(optStorePass);
 
 		final Option optKeyPass = new Option(Command.KEY_PASS.getShortCmd(), Command.KEY_PASS.getLongCmd(), true,
-				"Passphrase to access key inside the keystore file.");
+				Command.KEY_PASS.getDesc());
 		optKeyPass.setRequired(false);
 		opts.addOption(optKeyPass);
 
@@ -304,12 +375,12 @@ public final class Cli {
 		// opts.addOption(optList);
 
 		final Option optStorePass = new Option(Command.STORE_PASS.getShortCmd(), Command.STORE_PASS.getLongCmd(), true,
-				"Passphrase to access the keystore file.");
+				Command.STORE_PASS.getDesc());
 		optStorePass.setRequired(false);
 		opts.addOption(optStorePass);
 
 		final Option optKeyPass = new Option(Command.KEY_PASS.getShortCmd(), Command.KEY_PASS.getLongCmd(), true,
-				"Passphrase to access key inside the keystore file.");
+				Command.KEY_PASS.getDesc());
 		optKeyPass.setRequired(false);
 		opts.addOption(optKeyPass);
 
@@ -328,12 +399,12 @@ public final class Cli {
 		// opts.addOption(optRemove);
 
 		final Option optStorePass = new Option(Command.STORE_PASS.getShortCmd(), Command.STORE_PASS.getLongCmd(), true,
-				"Passphrase to access the keystore file.");
+				Command.STORE_PASS.getDesc());
 		optStorePass.setRequired(false);
 		opts.addOption(optStorePass);
 
 		final Option optKeyPass = new Option(Command.KEY_PASS.getShortCmd(), Command.KEY_PASS.getLongCmd(), true,
-				"Passphrase to access key inside the keystore file.");
+				Command.KEY_PASS.getDesc());
 		optKeyPass.setRequired(false);
 		opts.addOption(optKeyPass);
 
