@@ -30,10 +30,17 @@
 		</file>
 
 		<file>
-			<source>${project.basedir}/src/resources/conf/settings.properties</source>
+			<source>${project.basedir}/src/resources/conf/dcloud-config.properties</source>
 			<outputDirectory>conf/</outputDirectory>
 			<lineEnding>unix</lineEnding>
 			<filtered>true</filtered>
+		</file>
+
+		<file>
+			<source>${project.basedir}/src/resources/conf/dcloud-sconfig.jceks</source>
+			<outputDirectory>conf/</outputDirectory>
+			<lineEnding>keep</lineEnding>
+			<filtered>false</filtered>
 		</file>
 
 		<file>
@@ -48,6 +55,20 @@
 			<outputDirectory>conf/</outputDirectory>
 			<lineEnding>unix</lineEnding>
 			<filtered>true</filtered>
+		</file>
+
+		<file>
+			<source>${project.basedir}/src/resources/sample/lipsum.txt</source>
+			<outputDirectory>workspace/</outputDirectory>
+			<lineEnding>unix</lineEnding>
+			<filtered>true</filtered>
+		</file>
+
+		<file>
+			<source>${project.basedir}/src/resources/sample/github-mark.png</source>
+			<outputDirectory>workspace/</outputDirectory>
+			<lineEnding>keep</lineEnding>
+			<filtered>false</filtered>
 		</file>
 
 	</files>
