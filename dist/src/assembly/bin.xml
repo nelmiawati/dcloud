@@ -17,49 +17,12 @@
 		</file>
 
 		<file>
-			<source>${project.basedir}/src/resources/bin/disperse.bat</source>
+			<source>${project.basedir}/src/resources/bin/dcloud.bat</source>
 			<outputDirectory>bin/</outputDirectory>
 			<filtered>true</filtered>
 		</file>
 		<file>
-			<source>${project.basedir}/src/resources/bin/disperse.sh</source>
-			<outputDirectory>bin/</outputDirectory>
-			<lineEnding>unix</lineEnding>
-			<fileMode>0744</fileMode>
-			<filtered>true</filtered>
-		</file>
-		<file>
-			<source>${project.basedir}/src/resources/bin/reconstruct.bat</source>
-			<outputDirectory>bin/</outputDirectory>
-			<filtered>true</filtered>
-		</file>
-		<file>
-			<source>${project.basedir}/src/resources/bin/reconstruct.sh</source>
-			<outputDirectory>bin/</outputDirectory>
-			<lineEnding>unix</lineEnding>
-			<fileMode>0744</fileMode>
-			<filtered>true</filtered>
-		</file>
-
-		<file>
-			<source>${project.basedir}/src/resources/bin/dcloud-upload.bat</source>
-			<outputDirectory>bin/</outputDirectory>
-			<filtered>true</filtered>
-		</file>
-		<file>
-			<source>${project.basedir}/src/resources/bin/dcloud-upload.sh</source>
-			<outputDirectory>bin/</outputDirectory>
-			<lineEnding>unix</lineEnding>
-			<fileMode>0744</fileMode>
-			<filtered>true</filtered>
-		</file>
-		<file>
-			<source>${project.basedir}/src/resources/bin/dcloud-download.bat</source>
-			<outputDirectory>bin/</outputDirectory>
-			<filtered>true</filtered>
-		</file>
-		<file>
-			<source>${project.basedir}/src/resources/bin/dcloud-download.sh</source>
+			<source>${project.basedir}/src/resources/bin/dcloud.sh</source>
 			<outputDirectory>bin/</outputDirectory>
 			<lineEnding>unix</lineEnding>
 			<fileMode>0744</fileMode>

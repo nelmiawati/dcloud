@@ -35,15 +35,13 @@
         </filter>
     </appender>
 
-    <logger name="id.ac.polibatam.mj.dcloud.main.Disperse">
+    <logger name="id.ac.polibatam">
         <level value="TRACE" />
-        <appender-ref ref="ConsoleAppender" />
         <appender-ref ref="DCLOUD_LOG" />
     </logger>
     
     <logger name="org.apache">
         <level value="TRACE" />
-        <appender-ref ref="ConsoleAppender" />
         <appender-ref ref="DCLOUD_LOG" />
     </logger>
 

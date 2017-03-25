@@ -17,6 +17,7 @@ import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 /**
@@ -137,7 +138,7 @@ public final class Cli {
 		final Options optsMain = this.buildOptsMain();
 
 		try {
-			final CommandLine cl = clParser.parse(optsMain, this.args);
+			final CommandLine cl = clParser.parse(optsMain, this.args, true);
 			Option[] opts = cl.getOptions();
 			if (opts.length != 1) {
 				this.printMainHelp();
@@ -153,27 +154,45 @@ public final class Cli {
 
 				switch (cmd) {
 				case UPLOAD: {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("##### UPLODAD #####");
+					}						
 					break;
 
 				}
 				case DOWNLOAD: {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("##### DOWNLOAD #####");
+					}						
 					break;
 
 				}
 				case LIST: {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("##### LIST #####");
+					}						
 					break;
 
 				}
 				case REMOVE: {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("##### REMOVE #####");
+					}						
 					break;
 
 				}
 				case VERSION: {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("##### VERSION #####");
+					}						
 					this.execVersion();
 					break;
 
 				}
 				default: {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("##### DEFAULT #####");
+					}						
 					if (args.size() != 1) {
 						this.printMainHelp();
 					} else {
@@ -184,14 +203,11 @@ public final class Cli {
 			}
 
 		} catch (ParseException e) {
-			LOG.warn(e.getMessage());
+			if (LOG.isEnabledFor(Level.WARN)) {
+				LOG.warn(e.getMessage());
+			}
 			this.printMainHelp();
 		}
-	}
-
-	public static void main(String[] args) {
-		Cli cli = new Cli(new String[] { "--help", "dl" });
-		cli.exec();
 	}
 
 	private void printMainHelp() {
@@ -214,38 +230,50 @@ public final class Cli {
 
 				switch (cmd) {
 				case UPLOAD: {
-					this.helpFormatter.printHelp("-" + Command.UPLOAD.shortCmd + "," + "--" + Command.UPLOAD.longCmd
-							+ "; " + Command.UPLOAD.getDesc() + " Following are parameters for this command: ", this.buildOptsUpload());
+					this.helpFormatter.printHelp(
+							"-" + Command.UPLOAD.shortCmd + "," + "--" + Command.UPLOAD.longCmd + "; "
+									+ Command.UPLOAD.getDesc() + " Following are parameters for this command: ",
+							this.buildOptsUpload());
 					break;
 
 				}
 				case DOWNLOAD: {
-					this.helpFormatter.printHelp("-" + Command.DOWNLOAD.shortCmd + "," + "--" + Command.DOWNLOAD.longCmd
-							+ "; " + Command.DOWNLOAD.getDesc() + " Following are parameters for this command: ", this.buildOptsDownload());
+					this.helpFormatter.printHelp(
+							"-" + Command.DOWNLOAD.shortCmd + "," + "--" + Command.DOWNLOAD.longCmd + "; "
+									+ Command.DOWNLOAD.getDesc() + " Following are parameters for this command: ",
+							this.buildOptsDownload());
 					break;
 
 				}
 				case LIST: {
-					this.helpFormatter.printHelp("-" + Command.LIST.shortCmd + "," + "--" + Command.LIST.longCmd + "; "
-							+ Command.LIST.getDesc() + " Following are parameters for this command: ", this.buildOptsList());
+					this.helpFormatter.printHelp(
+							"-" + Command.LIST.shortCmd + "," + "--" + Command.LIST.longCmd + "; "
+									+ Command.LIST.getDesc() + " Following are parameters for this command: ",
+							this.buildOptsList());
 					break;
 
 				}
 				case REMOVE: {
-					this.helpFormatter.printHelp("-" + Command.REMOVE.shortCmd + "," + "--" + Command.REMOVE.longCmd
-							+ "; " + Command.REMOVE.getDesc() + " Following are parameters for this command: ", this.buildOptsRemove());
+					this.helpFormatter.printHelp(
+							"-" + Command.REMOVE.shortCmd + "," + "--" + Command.REMOVE.longCmd + "; "
+									+ Command.REMOVE.getDesc() + " Following are parameters for this command: ",
+							this.buildOptsRemove());
 					break;
 
 				}
 				case HELP: {
-					this.helpFormatter.printHelp("-" + Command.REMOVE.shortCmd + "," + "--" + Command.REMOVE.longCmd
-							+ "; " + Command.HELP.desc + " Following are parameters for this command: ", new Options());
+					this.helpFormatter.printHelp(
+							"-" + Command.REMOVE.shortCmd + "," + "--" + Command.REMOVE.longCmd + "; "
+									+ Command.HELP.desc + " Following are parameters for this command: ",
+							new Options());
 					break;
 
 				}
 				case VERSION: {
-					this.helpFormatter.printHelp("-" + Command.VERSION.shortCmd + "," + "--" + Command.VERSION.longCmd
-							+ "; " + Command.VERSION.getDesc() + " Following are parameters for this command: ", new Options());
+					this.helpFormatter.printHelp(
+							"-" + Command.VERSION.shortCmd + "," + "--" + Command.VERSION.longCmd + "; "
+									+ Command.VERSION.getDesc() + " Following are parameters for this command: ",
+							new Options());
 					break;
 
 				}
