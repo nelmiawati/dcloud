@@ -13,8 +13,8 @@
 	<artifactId>dcloud-dist</artifactId>
 	<packaging>pom</packaging>
 
-	<name>dCloud - Shell Distribution</name>
-	<description>dCloud shell script distribution</description>
+	<name>dCloud - Distribution</name>
+	<description>dCloud Distribution</description>
 
 	<properties>
 		<main.basedir>${project.basedir}/../..</main.basedir>
@@ -73,6 +73,21 @@
 		<dependency>
 			<groupId>ac.id.polibatam.mj.dcloud</groupId>
 			<artifactId>dcloud-core</artifactId>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>ac.id.polibatam.mj.dcloud</groupId>
+			<artifactId>dcloud-plugin-dropbox</artifactId>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>ac.id.polibatam.mj.dcloud</groupId>
+			<artifactId>dcloud-ui-cli</artifactId>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>ac.id.polibatam.mj.dcloud</groupId>
+			<artifactId>dcloud-ui-gui</artifactId>
 			<type>jar</type>
 		</dependency>
 

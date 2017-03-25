@@ -6,14 +6,14 @@
 		<groupId>ac.id.polibatam.mj.dcloud</groupId>
 		<artifactId>dcloud-root</artifactId>
 		<version>1.0.0-SNAPSHOT</version>
-		<relativePath>../pom.xml</relativePath>
+		<relativePath>../../pom.xml</relativePath>
 	</parent>
 
-	<artifactId>dcloud-core</artifactId>
+	<artifactId>dcloud-plugin-dropbox</artifactId>
 	<packaging>jar</packaging>
 
-	<name>dCloud - Core</name>
-	<description>dCloud core engine</description>
+	<name>dCloud - PlugIn DropBox</name>
+	<description>dCloud PlugIn DropBox</description>
 
 	<properties>
 	</properties>
@@ -39,34 +39,14 @@
 	<dependencies>
 
 		<dependency>
-			<groupId>commons-configuration</groupId>
-			<artifactId>commons-configuration</artifactId>
-			<type>jar</type>
-		</dependency>
-		<dependency>
-			<groupId>commons-lang</groupId>
-			<artifactId>commons-lang</artifactId>
-			<type>jar</type>
-		</dependency>
-		<dependency>
-			<groupId>commons-codec</groupId>
-			<artifactId>commons-codec</artifactId>
-			<type>jar</type>
-		</dependency>
-		<dependency>
-			<groupId>commons-logging</groupId>
-			<artifactId>commons-logging</artifactId>
-			<type>jar</type>
-		</dependency>
-		<dependency>
-			<groupId>commons-io</groupId>
-			<artifactId>commons-io</artifactId>
+			<groupId>ac.id.polibatam.mj.dcloud</groupId>
+			<artifactId>dcloud-core</artifactId>
 			<type>jar</type>
 		</dependency>
 
 		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
+			<groupId>com.dropbox.core</groupId>
+			<artifactId>dropbox-core-sdk</artifactId>
 			<type>jar</type>
 		</dependency>
 

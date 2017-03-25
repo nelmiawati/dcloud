@@ -31,8 +31,10 @@
 
 	<modules>
 		<module>core</module>
-		<!--<module>android</module> -->
-		<module>dist/shell-dist</module>
+		<module>plugin/dropbox</module>
+		<module>ui/cli</module>
+		<module>ui/gui</module>
+		<module>dist</module>
 	</modules>
 
 	<properties>
@@ -109,7 +111,24 @@
 				<version>${project.version}</version>
 				<type>jar</type>
 			</dependency>
-
+			<dependency>
+				<groupId>ac.id.polibatam.mj.dcloud</groupId>
+				<artifactId>dcloud-plugin-dropbox</artifactId>
+				<version>${project.version}</version>
+				<type>jar</type>
+			</dependency>
+			<dependency>
+				<groupId>ac.id.polibatam.mj.dcloud</groupId>
+				<artifactId>dcloud-ui-cli</artifactId>
+				<version>${project.version}</version>
+				<type>jar</type>
+			</dependency>
+			<dependency>
+				<groupId>ac.id.polibatam.mj.dcloud</groupId>
+				<artifactId>dcloud-ui-gui</artifactId>
+				<version>${project.version}</version>
+				<type>jar</type>
+			</dependency>
 			<dependency>
 				<groupId>ac.id.polibatam.mj.dcloud</groupId>
 				<artifactId>dcloud-dist</artifactId>
