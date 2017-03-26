@@ -3,6 +3,7 @@
  */
 package id.ac.polibatam.mj.dcloud.util;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +21,11 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
+import id.ac.polibatam.mj.dcloud.config.DcloudConfig;
+import id.ac.polibatam.mj.dcloud.config.DcloudSecureConfig;
+import id.ac.polibatam.mj.dcloud.exception.runtime.DcloudSystemInternalRuntimeException;
+import id.ac.polibatam.mj.dcloud.io.CloudClientFactory;
+
 /**
  * @author mia
  *
@@ -28,6 +34,7 @@ public final class Cli {
 
 	private static final Logger LOG = Logger.getLogger(Cli.class);
 	private static final String DCLOUD_VERSION = ":: dCLOUD v1.0 :: miarifSOFT :: copyright (r) 2017";
+	private static final DcloudConfig CONFIG = DcloudConfig.getInstance();
 
 	private static enum Command {
 
@@ -71,6 +78,10 @@ public final class Cli {
 		 * 		
 		 */
 		KEY_PASS("kp", "keyPass", "Passphrase to access key inside the keystore file."),
+		/**
+		 * 
+		 */
+		PING("p", "ping", "Ping connection to cloud servers."),
 		/**
 		 * 
 		 */
@@ -156,35 +167,43 @@ public final class Cli {
 				case UPLOAD: {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("##### UPLODAD #####");
-					}						
+					}
 					break;
 
 				}
 				case DOWNLOAD: {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("##### DOWNLOAD #####");
-					}						
+					}
 					break;
 
 				}
 				case LIST: {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("##### LIST #####");
-					}						
+					}
 					break;
 
 				}
 				case REMOVE: {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("##### REMOVE #####");
-					}						
+					}
+					break;
+
+				}
+				case PING: {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("##### PING #####");
+					}
+					this.execPing();
 					break;
 
 				}
 				case VERSION: {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("##### VERSION #####");
-					}						
+					}
 					this.execVersion();
 					break;
 
@@ -192,7 +211,7 @@ public final class Cli {
 				default: {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("##### DEFAULT #####");
-					}						
+					}
 					if (args.size() != 1) {
 						this.printMainHelp();
 					} else {
@@ -261,11 +280,12 @@ public final class Cli {
 					break;
 
 				}
-				case HELP: {
+				case PING: {
 					this.helpFormatter.printHelp(
-							"-" + Command.REMOVE.shortCmd + "," + "--" + Command.REMOVE.longCmd + "; "
-									+ Command.HELP.desc + " Following are parameters for this command: ",
-							new Options());
+							"-" + Command.PING.shortCmd + "," + "--" + Command.PING.longCmd + "; "
+									+ Command.PING.getDesc() + " Following are parameters for this command: ",
+							this.buildOptsPing());
+
 					break;
 
 				}
@@ -277,12 +297,93 @@ public final class Cli {
 					break;
 
 				}
+				case HELP: {
+					this.helpFormatter.printHelp(
+							"-" + Command.REMOVE.shortCmd + "," + "--" + Command.REMOVE.longCmd + "; "
+									+ Command.HELP.desc + " Following are parameters for this command: ",
+							new Options());
+					break;
+
+				}
 				default: {
 					this.printMainHelp();
 				}
 				}
 			}
 		}
+	}
+
+	private void execPing() {
+
+		final Options optsPing = this.buildOptsPing();
+
+		final String[] cmdArgs = new String[this.args.length - 1];
+		System.arraycopy(this.args, 1, cmdArgs, 0, cmdArgs.length);
+		if (LOG.isTraceEnabled()) {
+			LOG.trace("cmdArgs=[" + Arrays.toString(cmdArgs) + "]");
+		}
+
+		try {
+			final CommandLine cl = clParser.parse(optsPing, cmdArgs);
+			Option[] opts = cl.getOptions();
+			if (opts.length < 1) {
+				this.execHelp(this.args[0]);
+			} else {
+
+				// Iterate config
+				final int nbCloud = CONFIG.getInt(DcloudConfig.Param.DCLOUD_COUNT);
+				System.out.println(":: CONFIGURATIONS ::");
+				for (DcloudConfig.Param param : DcloudConfig.Param.values()) {
+					if (!DcloudConfig.Param.CLIENT.equals(param) && !DcloudConfig.Param.CREDENTIAL.equals(param)) {
+						System.out.println(param.getName().concat("=[").concat(CONFIG.getString(param)).concat("]"));
+					} else {
+						for (int i = 0; i < nbCloud; i++) {
+							final String idx = Integer.toString(i + 1);
+							System.out.println("dcloud" + idx + "-" + param.getName().concat("=[")
+									.concat(CONFIG.getString("dcloud" + idx, param)).concat("]"));
+						}
+					}
+				}
+
+				// dcloud server
+				final String storePass = cl.getOptionValue(Command.STORE_PASS.shortCmd);
+				final String keyPass = cl.getOptionValue(Command.KEY_PASS.shortCmd);
+//				if (LOG.isTraceEnabled()) {
+//					LOG.trace("storePass=[" + storePass + "]");
+//					LOG.trace("keyPass=[" + keyPass + "]");
+//				}
+				System.setProperty("sconfigPassword", storePass);
+				final DcloudSecureConfig sconfig = DcloudSecureConfig.getInstance();
+				System.out.println(":: TEST CONNECTION TO DCLOUD SERVERS ::");
+				for (int i = 0; i < nbCloud; i++) {
+					final String idx = Integer.toString(i + 1);
+
+					final String client = CONFIG.getString("dcloud" + idx, DcloudConfig.Param.CLIENT);
+					final String credential = CONFIG.getString("dcloud" + idx, DcloudConfig.Param.CREDENTIAL);
+
+					final byte[] accessToken = sconfig.getByte(credential, keyPass);
+					final String strAccessToken = new String(accessToken, "UTF-8");
+
+					if (LOG.isTraceEnabled()) {
+						LOG.trace("client=[" + client + "]");
+						LOG.trace("credential=[" + credential + "]");
+//						LOG.trace("strAccessToken=[" + strAccessToken + "]");
+					}
+
+					System.out.println("Connecting to dcloud" + idx);
+					CloudClientFactory.getCloudClient(client, strAccessToken);
+				}
+
+			}
+		} catch (UnsupportedEncodingException e) {
+			throw new DcloudSystemInternalRuntimeException(e.getMessage(), e);
+		} catch (ParseException e) {
+			if (LOG.isEnabledFor(Level.WARN)) {
+				LOG.warn(e.getMessage());
+			}
+			this.execHelp(this.args[0]);
+		}
+
 	}
 
 	private void execVersion() {
@@ -310,14 +411,18 @@ public final class Cli {
 				Command.REMOVE.desc);
 		optsG.addOption(optRemove);
 
-		final Option optHelp = new Option(Command.HELP.getShortCmd(), Command.HELP.getLongCmd(), true,
-				Command.HELP.getDesc());
-		optHelp.setOptionalArg(true);
-		optsG.addOption(optHelp);
+		final Option optPing = new Option(Command.PING.getShortCmd(), Command.PING.getLongCmd(), false,
+				Command.PING.getDesc());
+		optsG.addOption(optPing);
 
 		final Option optVersion = new Option(Command.VERSION.getShortCmd(), Command.VERSION.getLongCmd(), false,
 				Command.VERSION.getDesc());
 		optsG.addOption(optVersion);
+
+		final Option optHelp = new Option(Command.HELP.getShortCmd(), Command.HELP.getLongCmd(), true,
+				Command.HELP.getDesc());
+		optHelp.setOptionalArg(true);
+		optsG.addOption(optHelp);
 
 		optsG.setRequired(true);
 		opts.addOptionGroup(optsG);
@@ -439,4 +544,26 @@ public final class Cli {
 		return opts;
 	}
 
+	private Options buildOptsPing() {
+
+		final Options opts = new Options();
+
+		// final Option optPing = new Option(Command.PING.getShortCmd(),
+		// Command.PING.getLongCmd(), false,
+		// "Ping connection to cloud servers.");
+		// optRemove.setRequired(true);
+		// opts.addOption(optPing);
+
+		final Option optStorePass = new Option(Command.STORE_PASS.getShortCmd(), Command.STORE_PASS.getLongCmd(), true,
+				Command.STORE_PASS.getDesc());
+		optStorePass.setRequired(false);
+		opts.addOption(optStorePass);
+
+		final Option optKeyPass = new Option(Command.KEY_PASS.getShortCmd(), Command.KEY_PASS.getLongCmd(), true,
+				Command.KEY_PASS.getDesc());
+		optKeyPass.setRequired(false);
+		opts.addOption(optKeyPass);
+
+		return opts;
+	}
 }

@@ -5,7 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 
 public class CloudClientFactory {
 
-	public ICloudClient getCloudClien(final String className, final String accessToken) {
+	public static ICloudClient getCloudClient(final String className, final String accessToken) {
 
 		ICloudClient client = null;
 		try {

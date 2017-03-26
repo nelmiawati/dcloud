@@ -45,6 +45,17 @@ public abstract class ASecureConfig extends AConfig {
 		return this.getByte(null, param, pwd);
 	}
 
+	public byte[] getByte(final String param, final String pwd) {
+		byte[] value = null;
+		try {
+			value = this.keyStore.getSecretKey(param, pwd);
+		} catch (DcloudSystemInternalException e) {
+			throw new DcloudSystemInternalRuntimeException(e.getMessage(), e);
+		}
+
+		return value;
+	}
+
 	public byte[] getByte(final String prefix, final IParam param, final String pwd) {
 
 		byte[] value = null;

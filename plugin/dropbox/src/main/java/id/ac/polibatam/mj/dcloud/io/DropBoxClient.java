@@ -52,8 +52,8 @@ public class DropBoxClient implements ICloudClient {
 			// final DbxEntry.File uploadedFile = this.dbxClient.uploadFile("/"
 			// + toRemote, DbxWriteMode.force(),
 			// fromLocal.length(), fis);
-			final DbxEntry.File uploadedFile = this.dbxClient.uploadFile(toRemote, DbxWriteMode.force(),
-					file.length(), fis);
+			final DbxEntry.File uploadedFile = this.dbxClient.uploadFile(toRemote, DbxWriteMode.force(), file.length(),
+					fis);
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("UploadedFIle=[" + uploadedFile.toString() + "]");
 			}
@@ -154,9 +154,14 @@ public class DropBoxClient implements ICloudClient {
 		try {
 			final DbxAccountInfo dbxAccountInfo = dbxClient.getAccountInfo();
 			// in GB :)
-			LOG.trace(dbxAccountInfo.toString());
-			LOG.trace("Dropbox accountName=[" + dbxAccountInfo.displayName + "]");
-			LOG.trace("dropboxSize=[" + (dbxAccountInfo.quota.total / 1024 / 1024 / 1024 + "]"));
+			if (LOG.isTraceEnabled()) {
+				LOG.trace(dbxAccountInfo.toString());
+				LOG.trace("Dropbox accountName=[" + dbxAccountInfo.displayName + "]");
+				LOG.trace("dropboxSize=[" + (dbxAccountInfo.quota.total / 1024 / 1024 / 1024 + "] GB"));
+			}
+			System.out.println(dbxAccountInfo.toString());
+			System.out.println("Dropbox accountName=[" + dbxAccountInfo.displayName + "]");
+			System.out.println("dropboxSize=[" + (dbxAccountInfo.quota.total / 1024 / 1024 / 1024 + "] GB"));
 		} catch (DbxException e) {
 			if (LOG.isEnabledFor(Level.WARN)) {
 				LOG.warn(e.getMessage());
