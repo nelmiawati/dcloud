@@ -3,6 +3,9 @@
  */
 package id.ac.polibatam.mj.dcloud.util;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -25,6 +28,7 @@ import id.ac.polibatam.mj.dcloud.config.DcloudConfig;
 import id.ac.polibatam.mj.dcloud.config.DcloudSecureConfig;
 import id.ac.polibatam.mj.dcloud.exception.runtime.DcloudSystemInternalRuntimeException;
 import id.ac.polibatam.mj.dcloud.io.CloudClientFactory;
+import id.ac.polibatam.mj.dcloud.io.ICloudClient;
 
 /**
  * @author mia
@@ -34,6 +38,11 @@ public final class Cli {
 
 	private static final Logger LOG = Logger.getLogger(Cli.class);
 	private static final String DCLOUD_VERSION = ":: dCLOUD v1.0 :: miarifSOFT :: copyright (r) 2017";
+
+	private static final int HELP_WIDTH = 640;
+	private static final int HELP_LEFT_PAD = 4;
+	private static final int HELP_DESC_PAD = 4;
+
 	private static final DcloudConfig CONFIG = DcloudConfig.getInstance();
 
 	private static enum Command {
@@ -145,14 +154,15 @@ public final class Cli {
 
 	}
 
-	public void exec() {
+	public String exec() {
+
 		final Options optsMain = this.buildOptsMain();
 
 		try {
 			final CommandLine cl = clParser.parse(optsMain, this.args, true);
 			Option[] opts = cl.getOptions();
 			if (opts.length != 1) {
-				this.printMainHelp();
+				return this.printMainHelp();
 			} else {
 				final Command cmd = Command.getCommand(opts[0].getOpt());
 				final List<String> args = opts[0].getValuesList();
@@ -166,46 +176,44 @@ public final class Cli {
 				switch (cmd) {
 				case UPLOAD: {
 					if (LOG.isDebugEnabled()) {
-						LOG.debug("##### UPLODAD #####");
+						LOG.debug("##### UPLOAD #####");
 					}
-					break;
+					return "##### UPLOAD #####";
 
 				}
 				case DOWNLOAD: {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("##### DOWNLOAD #####");
 					}
-					break;
+					return "##### DOWNLOAD #####";
 
 				}
 				case LIST: {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("##### LIST #####");
 					}
-					break;
+					return "##### LIST #####";
 
 				}
 				case REMOVE: {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("##### REMOVE #####");
 					}
-					break;
+					return "##### REMOVE #####";
 
 				}
 				case PING: {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("##### PING #####");
 					}
-					this.execPing();
-					break;
+					return this.execPing();					
 
 				}
 				case VERSION: {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("##### VERSION #####");
 					}
-					this.execVersion();
-					break;
+					return this.execVersion();
 
 				}
 				default: {
@@ -213,9 +221,9 @@ public final class Cli {
 						LOG.debug("##### DEFAULT #####");
 					}
 					if (args.size() != 1) {
-						this.printMainHelp();
+						return this.printMainHelp();
 					} else {
-						this.execHelp(args.get(0));
+						return this.execHelp(args.get(0));
 					}
 				}
 				}
@@ -225,95 +233,171 @@ public final class Cli {
 			if (LOG.isEnabledFor(Level.WARN)) {
 				LOG.warn(e.getMessage());
 			}
-			this.printMainHelp();
+			return this.printMainHelp();
 		}
+
 	}
 
-	private void printMainHelp() {
-		helpFormatter.printHelp(
+	private String printMainHelp() {
+
+		String cmdLog = null;
+		final StringWriter sw = new StringWriter();
+		final PrintWriter pw = new PrintWriter(sw);
+
+		helpFormatter.printHelp(pw, HELP_WIDTH, "<command> [arg] [<param1> ... <paramN>]",
 				"Following are available commands on dCLOUD. To get details for each of command, type -h <command> or --help <command>",
-				this.buildOptsMain());
+				this.buildOptsMain(), HELP_LEFT_PAD, HELP_DESC_PAD, null);
+		cmdLog = sw.toString();
+
+		this.closeCmdLogWriter(pw, sw);
+
+		return cmdLog;
+		// helpFormatter.printHelp(
+		// "Following are available commands on dCLOUD. To get details for each
+		// of command, type -h <command> or --help <command>",
+		// this.buildOptsMain());
+
 	}
 
-	private void execHelp(final String arg) {
+	private String execHelp(final String arg) {
+
 		if (StringUtils.isEmpty(arg)) {
-			this.printMainHelp();
+			return printMainHelp();
 		} else {
 			final Command cmd = Command.getCommand(arg);
 			if (LOG.isTraceEnabled()) {
 				LOG.trace("cmd=[" + cmd + "]");
 			}
 			if (null == cmd) {
-				this.printMainHelp();
+				return this.printMainHelp();
 			} else {
+
+				String cmdLog = null;
+				final StringWriter sw = new StringWriter();
+				final PrintWriter pw = new PrintWriter(sw);
 
 				switch (cmd) {
 				case UPLOAD: {
-					this.helpFormatter.printHelp(
-							"-" + Command.UPLOAD.shortCmd + "," + "--" + Command.UPLOAD.longCmd + "; "
-									+ Command.UPLOAD.getDesc() + " Following are parameters for this command: ",
-							this.buildOptsUpload());
+					this.helpFormatter.printHelp(pw, HELP_WIDTH,
+							"-" + Command.UPLOAD.shortCmd + "," + "--" + Command.UPLOAD.longCmd
+									+ " <param1> ... <paramN>",
+							Command.UPLOAD.getDesc() + " Following are parameters for this command: ",
+							this.buildOptsUpload(), HELP_LEFT_PAD, HELP_DESC_PAD, null);
+					cmdLog = sw.toString();
+					// this.helpFormatter.printHelp(
+					// "-" + Command.UPLOAD.shortCmd + "," + "--" +
+					// Command.UPLOAD.longCmd + "; "
+					// + Command.UPLOAD.getDesc() + " Following are parameters
+					// for this command: ",
+					// this.buildOptsUpload());
 					break;
 
 				}
 				case DOWNLOAD: {
-					this.helpFormatter.printHelp(
-							"-" + Command.DOWNLOAD.shortCmd + "," + "--" + Command.DOWNLOAD.longCmd + "; "
-									+ Command.DOWNLOAD.getDesc() + " Following are parameters for this command: ",
-							this.buildOptsDownload());
+					this.helpFormatter.printHelp(pw, HELP_WIDTH,
+							"-" + Command.DOWNLOAD.shortCmd + "," + "--" + Command.DOWNLOAD.longCmd
+									+ " <param1> ... <paramN>",
+							Command.DOWNLOAD.getDesc() + " Following are parameters for this command: ",
+							this.buildOptsDownload(), HELP_LEFT_PAD, HELP_DESC_PAD, null);
+					cmdLog = sw.toString();
+					// this.helpFormatter.printHelp(
+					// "-" + Command.DOWNLOAD.shortCmd + "," + "--" +
+					// Command.DOWNLOAD.longCmd + "; "
+					// + Command.DOWNLOAD.getDesc() + " Following are parameters
+					// for this command: ",
+					// this.buildOptsDownload());
 					break;
 
 				}
 				case LIST: {
-					this.helpFormatter.printHelp(
-							"-" + Command.LIST.shortCmd + "," + "--" + Command.LIST.longCmd + "; "
-									+ Command.LIST.getDesc() + " Following are parameters for this command: ",
-							this.buildOptsList());
+					this.helpFormatter.printHelp(pw, HELP_WIDTH,
+							"-" + Command.LIST.shortCmd + "," + "--" + Command.LIST.longCmd
+									+ " <arg> <param1> ... <paramN>",
+							Command.LIST.getDesc() + " Following are parameters for this command: ",
+							this.buildOptsList(), HELP_LEFT_PAD, HELP_DESC_PAD, null);
+					cmdLog = sw.toString();
+					// this.helpFormatter.printHelp(
+					// "-" + Command.LIST.shortCmd + "," + "--" +
+					// Command.LIST.longCmd + "; "
+					// + Command.LIST.getDesc() + " Following are parameters for
+					// this command: ",
+					// this.buildOptsList());
 					break;
 
 				}
 				case REMOVE: {
-					this.helpFormatter.printHelp(
-							"-" + Command.REMOVE.shortCmd + "," + "--" + Command.REMOVE.longCmd + "; "
-									+ Command.REMOVE.getDesc() + " Following are parameters for this command: ",
-							this.buildOptsRemove());
+					this.helpFormatter.printHelp(pw, HELP_WIDTH,
+							"-" + Command.REMOVE.shortCmd + "," + "--" + Command.REMOVE.longCmd
+									+ " <arg> <param1> <paramN>",
+							Command.REMOVE.getDesc() + " Following are parameters for this command: ",
+							this.buildOptsRemove(), HELP_LEFT_PAD, HELP_DESC_PAD, null);
+					cmdLog = sw.toString();
+					// this.helpFormatter.printHelp(
+					// "-" + Command.REMOVE.shortCmd + "," + "--" +
+					// Command.REMOVE.longCmd + "; "
+					// + Command.REMOVE.getDesc() + " Following are parameters
+					// for this command: ",
+					// this.buildOptsRemove());
 					break;
 
 				}
 				case PING: {
-					this.helpFormatter.printHelp(
-							"-" + Command.PING.shortCmd + "," + "--" + Command.PING.longCmd + "; "
-									+ Command.PING.getDesc() + " Following are parameters for this command: ",
-							this.buildOptsPing());
-
+					this.helpFormatter.printHelp(pw, HELP_WIDTH,
+							"-" + Command.PING.shortCmd + "," + "--" + Command.PING.longCmd + " <param1> ... <paramN>",
+							Command.PING.getDesc() + " Following are parameters for this command: ",
+							this.buildOptsPing(), HELP_LEFT_PAD, HELP_DESC_PAD, null);
+					cmdLog = sw.toString();
+					// this.helpFormatter.printHelp(
+					// "-" + Command.PING.shortCmd + "," + "--" +
+					// Command.PING.longCmd + "; "
+					// + Command.PING.getDesc() + " Following are parameters for
+					// this command: ",
+					// this.buildOptsPing());
 					break;
 
 				}
 				case VERSION: {
-					this.helpFormatter.printHelp(
-							"-" + Command.VERSION.shortCmd + "," + "--" + Command.VERSION.longCmd + "; "
-									+ Command.VERSION.getDesc() + " Following are parameters for this command: ",
-							new Options());
+					this.helpFormatter.printHelp(pw, HELP_WIDTH,
+							"-" + Command.VERSION.shortCmd + "," + "--" + Command.VERSION.longCmd,
+							Command.VERSION.getDesc() + " Following are parameters for this command: ", new Options(),
+							HELP_LEFT_PAD, HELP_DESC_PAD, null);
+					cmdLog = sw.toString();
+					// this.helpFormatter.printHelp(
+					// "-" + Command.VERSION.shortCmd + "," + "--" +
+					// Command.VERSION.longCmd + "; "
+					// + Command.VERSION.getDesc() + " Following are parameters
+					// for this command: ",
+					// new Options());
 					break;
 
 				}
 				case HELP: {
-					this.helpFormatter.printHelp(
-							"-" + Command.REMOVE.shortCmd + "," + "--" + Command.REMOVE.longCmd + "; "
-									+ Command.HELP.desc + " Following are parameters for this command: ",
-							new Options());
+					this.helpFormatter.printHelp(pw, HELP_WIDTH,
+							"-" + Command.REMOVE.shortCmd + "," + "--" + Command.REMOVE.longCmd + " <arg>",
+							Command.HELP.desc + " Following are parameters for this command: ", new Options(),
+							HELP_LEFT_PAD, HELP_DESC_PAD, null);
+					cmdLog = sw.toString();
+					// this.helpFormatter.printHelp(
+					// "-" + Command.REMOVE.shortCmd + "," + "--" +
+					// Command.REMOVE.longCmd + "; "
+					// + Command.HELP.desc + " Following are parameters for this
+					// command: ",
+					// new Options());
 					break;
 
 				}
 				default: {
-					this.printMainHelp();
+					cmdLog = this.printMainHelp();
 				}
 				}
+
+				this.closeCmdLogWriter(pw, sw);
+				return cmdLog;
 			}
 		}
 	}
 
-	private void execPing() {
+	private String execPing() {
 
 		final Options optsPing = this.buildOptsPing();
 
@@ -323,23 +407,29 @@ public final class Cli {
 			LOG.trace("cmdArgs=[" + Arrays.toString(cmdArgs) + "]");
 		}
 
+		String cmdLog = null;
+		StringWriter sw = null;
+		PrintWriter pw = null;
 		try {
 			final CommandLine cl = clParser.parse(optsPing, cmdArgs);
 			Option[] opts = cl.getOptions();
 			if (opts.length < 1) {
-				this.execHelp(this.args[0]);
+				cmdLog = this.execHelp(this.args[0]);
 			} else {
+
+				sw = new StringWriter();
+				pw = new PrintWriter(sw);
 
 				// Iterate config
 				final int nbCloud = CONFIG.getInt(DcloudConfig.Param.DCLOUD_COUNT);
-				System.out.println(":: CONFIGURATIONS ::");
+				pw.println(":: CONFIGURATIONS ::");
 				for (DcloudConfig.Param param : DcloudConfig.Param.values()) {
 					if (!DcloudConfig.Param.CLIENT.equals(param) && !DcloudConfig.Param.CREDENTIAL.equals(param)) {
-						System.out.println(param.getName().concat("=[").concat(CONFIG.getString(param)).concat("]"));
+						pw.println(param.getName().concat("=[").concat(CONFIG.getString(param)).concat("]"));
 					} else {
 						for (int i = 0; i < nbCloud; i++) {
 							final String idx = Integer.toString(i + 1);
-							System.out.println("dcloud" + idx + "-" + param.getName().concat("=[")
+							pw.println("dcloud" + idx + "-" + param.getName().concat("=[")
 									.concat(CONFIG.getString("dcloud" + idx, param)).concat("]"));
 						}
 					}
@@ -348,13 +438,13 @@ public final class Cli {
 				// dcloud server
 				final String storePass = cl.getOptionValue(Command.STORE_PASS.shortCmd);
 				final String keyPass = cl.getOptionValue(Command.KEY_PASS.shortCmd);
-//				if (LOG.isTraceEnabled()) {
-//					LOG.trace("storePass=[" + storePass + "]");
-//					LOG.trace("keyPass=[" + keyPass + "]");
-//				}
+				// if (LOG.isTraceEnabled()) {
+				// LOG.trace("storePass=[" + storePass + "]");
+				// LOG.trace("keyPass=[" + keyPass + "]");
+				// }
 				System.setProperty("sconfigPassword", storePass);
 				final DcloudSecureConfig sconfig = DcloudSecureConfig.getInstance();
-				System.out.println(":: TEST CONNECTION TO DCLOUD SERVERS ::");
+				pw.println(":: TEST CONNECTION TO DCLOUD SERVERS ::");
 				for (int i = 0; i < nbCloud; i++) {
 					final String idx = Integer.toString(i + 1);
 
@@ -367,12 +457,15 @@ public final class Cli {
 					if (LOG.isTraceEnabled()) {
 						LOG.trace("client=[" + client + "]");
 						LOG.trace("credential=[" + credential + "]");
-//						LOG.trace("strAccessToken=[" + strAccessToken + "]");
+						// LOG.trace("strAccessToken=[" + strAccessToken + "]");
 					}
 
-					System.out.println("Connecting to dcloud" + idx);
-					CloudClientFactory.getCloudClient(client, strAccessToken);
+					pw.println("Connecting to dcloud" + idx + "...");
+					final ICloudClient cloudClient = CloudClientFactory.getCloudClient(client, strAccessToken);
+					pw.println(cloudClient.getClientInfo());
 				}
+
+				cmdLog = sw.toString();
 
 			}
 		} catch (UnsupportedEncodingException e) {
@@ -381,13 +474,37 @@ public final class Cli {
 			if (LOG.isEnabledFor(Level.WARN)) {
 				LOG.warn(e.getMessage());
 			}
-			this.execHelp(this.args[0]);
+			return this.execHelp(this.args[0]);
+		} finally {
+			this.closeCmdLogWriter(pw, sw);
 		}
-
+			
+		return cmdLog;
+	
 	}
 
-	private void execVersion() {
-		System.out.println(DCLOUD_VERSION);
+	private String execVersion() {
+		return DCLOUD_VERSION;
+	}
+
+	private void closeCmdLogWriter(final PrintWriter pw, final StringWriter sw) {
+
+		if (null != pw) {
+			pw.flush();
+			pw.close();
+		}
+
+		if (null != sw) {
+			sw.flush();
+			try {
+				sw.close();
+			} catch (IOException e) {
+				if (LOG.isEnabledFor(Level.WARN)) {
+					LOG.warn(e.getMessage(), e);
+				}
+			}
+		}
+
 	}
 
 	private Options buildOptsMain() {

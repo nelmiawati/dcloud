@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -36,7 +38,7 @@ public class DropBoxClient implements ICloudClient {
 		this.dbxClient = this.auth(this.authAccessToken);
 
 		if (LOG.isTraceEnabled()) {
-			this.printInfo();
+			LOG.trace(this.getClientInfo());
 		}
 
 	}
@@ -150,23 +152,48 @@ public class DropBoxClient implements ICloudClient {
 		return new DbxClient(dbxRequestConfig, authAccessToken);
 	}
 
-	private void printInfo() {
+	@Override
+	public String getClientInfo() {
+
+		String info = null;
+		StringWriter sw = null;
+		PrintWriter pw = null;
 		try {
+			sw = new StringWriter();
+			pw = new PrintWriter(sw);
+
 			final DbxAccountInfo dbxAccountInfo = dbxClient.getAccountInfo();
 			// in GB :)
-			if (LOG.isTraceEnabled()) {
-				LOG.trace(dbxAccountInfo.toString());
-				LOG.trace("Dropbox accountName=[" + dbxAccountInfo.displayName + "]");
-				LOG.trace("dropboxSize=[" + (dbxAccountInfo.quota.total / 1024 / 1024 / 1024 + "] GB"));
-			}
-			System.out.println(dbxAccountInfo.toString());
-			System.out.println("Dropbox accountName=[" + dbxAccountInfo.displayName + "]");
-			System.out.println("dropboxSize=[" + (dbxAccountInfo.quota.total / 1024 / 1024 / 1024 + "] GB"));
+			pw.println(dbxAccountInfo.toString());
+			pw.println("Dropbox accountName=[" + dbxAccountInfo.displayName + "]");
+			pw.println("dropboxSize=[" + (dbxAccountInfo.quota.total / 1024 / 1024 / 1024 + "] GB"));
+			
+			info = sw.toString();
 		} catch (DbxException e) {
 			if (LOG.isEnabledFor(Level.WARN)) {
 				LOG.warn(e.getMessage());
 			}
+		} finally {
+
+			if (null != pw) {
+				pw.flush();
+				pw.close();
+			}
+
+			if (null != sw) {
+				sw.flush();
+				try {
+					sw.close();
+				} catch (IOException e) {
+					if (LOG.isEnabledFor(Level.WARN)) {
+						LOG.warn(e.getMessage(), e);
+					}
+				}
+			}
+
 		}
+		
+		return info;
 
 	}
 

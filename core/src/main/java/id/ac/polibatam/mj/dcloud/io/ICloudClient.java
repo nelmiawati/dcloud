@@ -17,5 +17,7 @@ public interface ICloudClient {
 	void delete(final String fileRemote) throws BaseDcloudException;
 
 	Map<String, FileType> list(final String direRemote) throws BaseDcloudException;
+	
+	String getClientInfo();
 
 }

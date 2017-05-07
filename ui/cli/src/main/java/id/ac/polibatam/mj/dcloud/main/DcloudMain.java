@@ -29,7 +29,7 @@ public final class DcloudMain {
 
 		try {
 			final Cli cli = new Cli(args);
-			cli.exec();
+			System.out.println(cli.exec());
 		} catch (Exception e) {
 			if (LOG.isEnabledFor(Level.ERROR)) {
 				LOG.error(e.getMessage(), e);
