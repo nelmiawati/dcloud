@@ -17,8 +17,7 @@ public abstract class APlainConfig extends AConfig {
 
 	protected Configuration configProperties = null;
 
-	protected abstract String getConfigFileName();
-
+	@Override
 	protected void loadConfigProperties() {
 		final URL url = ClassLoader.getSystemResource(this.getConfigFileName());
 		if (null == url) {

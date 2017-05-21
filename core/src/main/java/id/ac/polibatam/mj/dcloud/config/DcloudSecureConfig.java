@@ -51,4 +51,9 @@ public class DcloudSecureConfig extends ASecureConfig {
 		return System.getProperty("sconfigPassword");
 	}
 
+	@Override
+	protected void validateConfig() {
+
+	}
+
 }

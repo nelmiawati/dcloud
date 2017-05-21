@@ -3,6 +3,7 @@
  */
 package id.ac.polibatam.mj.dcloud.util;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -24,8 +25,11 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
+import id.ac.polibatam.mj.dcloud.algo.FileDispersal;
 import id.ac.polibatam.mj.dcloud.config.DcloudConfig;
+import id.ac.polibatam.mj.dcloud.config.DcloudConfig.Param;
 import id.ac.polibatam.mj.dcloud.config.DcloudSecureConfig;
+import id.ac.polibatam.mj.dcloud.exception.DcloudInvalidDataException;
 import id.ac.polibatam.mj.dcloud.exception.runtime.DcloudSystemInternalRuntimeException;
 import id.ac.polibatam.mj.dcloud.io.CloudClientFactory;
 import id.ac.polibatam.mj.dcloud.io.ICloudClient;
@@ -206,7 +210,7 @@ public final class Cli {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("##### PING #####");
 					}
-					return this.execPing();					
+					return this.execPing();
 
 				}
 				case VERSION: {
@@ -256,6 +260,179 @@ public final class Cli {
 		// "Following are available commands on dCLOUD. To get details for each
 		// of command, type -h <command> or --help <command>",
 		// this.buildOptsMain());
+
+	}
+
+	private String execUpload() throws DcloudInvalidDataException {
+
+		final Options optsUpload = this.buildOptsUpload();
+
+		final String[] cmdArgs = new String[this.args.length - 1];
+		System.arraycopy(this.args, 1, cmdArgs, 0, cmdArgs.length);
+		if (LOG.isTraceEnabled()) {
+			LOG.trace("cmdArgs=[" + Arrays.toString(cmdArgs) + "]");
+		}
+
+		String cmdLog = null;
+		StringWriter sw = null;
+		PrintWriter pw = null;
+		try {
+			final CommandLine cl = clParser.parse(optsUpload, cmdArgs);
+			Option[] opts = cl.getOptions();
+			if (opts.length < 4) {
+				cmdLog = this.execHelp(this.args[0]);
+			} else {
+
+				sw = new StringWriter();
+				pw = new PrintWriter(sw);
+
+				// Get cloud details
+				final String localWs = CONFIG.getString(Param.DCLOUD_LOCAL_WORKSPACE);
+				final int nbClouds = CONFIG.getInt(Param.DCLOUD_COUNT);
+				final int threshold = CONFIG.getInt(Param.DCLOUD_THRESHOLD);
+
+				// Get input parameters
+				final String storePass = cl.getOptionValue(Command.STORE_PASS.shortCmd);
+				final String keyPass = cl.getOptionValue(Command.KEY_PASS.shortCmd);
+				final String fromLocal = cl.getOptionValue(Command.FROM_LOCAL.shortCmd);
+				final String toRemote = cl.getOptionValue(Command.TO_REMOTE.shortCmd);
+
+				final File input = new File(localWs + File.separator + fromLocal);
+				if (!input.exists() || !input.isFile()) {
+					new DcloudInvalidDataException("INVALID fromLocal=[" + input.getAbsolutePath() + "]");
+				}
+
+				// Get sconfig
+				System.setProperty("sconfigPassword", storePass);
+				final DcloudSecureConfig sconfig = DcloudSecureConfig.getInstance();
+
+				// dispersal
+				final FileDispersal dispersal = new FileDispersal(nbClouds, threshold);
+				//dispersal.disperse(input, outputDir, useSalt)
+
+				// pw.println(":: TEST CONNECTION TO DCLOUD SERVERS ::");
+				// for (int i = 0; i < nbCloud; i++) {
+				// final String idx = Integer.toString(i + 1);
+				//
+				// final String client = CONFIG.getString("dcloud" + idx,
+				// DcloudConfig.Param.CLIENT);
+				// final String credential = CONFIG.getString("dcloud" + idx,
+				// DcloudConfig.Param.CREDENTIAL);
+				//
+				// final byte[] accessToken = sconfig.getByte(credential,
+				// keyPass);
+				// final String strAccessToken = new String(accessToken,
+				// "UTF-8");
+				//
+				// if (LOG.isTraceEnabled()) {
+				// LOG.trace("client=[" + client + "]");
+				// LOG.trace("credential=[" + credential + "]");
+				// // LOG.trace("strAccessToken=[" + strAccessToken + "]");
+				// }
+				//
+				// pw.println("Connecting to dcloud" + idx + "...");
+				// final ICloudClient cloudClient =
+				// CloudClientFactory.getCloudClient(client, strAccessToken);
+				// pw.println(cloudClient.getClientInfo());
+				// }
+
+				cmdLog = sw.toString();
+			}
+		} catch (ParseException e) {
+			if (LOG.isEnabledFor(Level.WARN)) {
+				LOG.warn(e.getMessage());
+			}
+			return this.execHelp(this.args[0]);
+		} finally {
+			this.closeCmdLogWriter(pw, sw);
+		}
+
+		return cmdLog;
+	}
+
+	private String execPing() {
+
+		final Options optsPing = this.buildOptsPing();
+
+		final String[] cmdArgs = new String[this.args.length - 1];
+		System.arraycopy(this.args, 1, cmdArgs, 0, cmdArgs.length);
+		if (LOG.isTraceEnabled()) {
+			LOG.trace("cmdArgs=[" + Arrays.toString(cmdArgs) + "]");
+		}
+
+		String cmdLog = null;
+		StringWriter sw = null;
+		PrintWriter pw = null;
+		try {
+			final CommandLine cl = clParser.parse(optsPing, cmdArgs);
+			Option[] opts = cl.getOptions();
+			if (opts.length < 2) {
+				cmdLog = this.execHelp(this.args[0]);
+			} else {
+
+				sw = new StringWriter();
+				pw = new PrintWriter(sw);
+
+				// Iterate config
+				final int nbCloud = CONFIG.getInt(DcloudConfig.Param.DCLOUD_COUNT);
+				pw.println(":: CONFIGURATIONS ::");
+				for (DcloudConfig.Param param : DcloudConfig.Param.values()) {
+					if (!DcloudConfig.Param.CLIENT.equals(param) && !DcloudConfig.Param.CREDENTIAL.equals(param)) {
+						pw.println(param.getName().concat("=[").concat(CONFIG.getString(param)).concat("]"));
+					} else {
+						for (int i = 0; i < nbCloud; i++) {
+							final String idx = Integer.toString(i + 1);
+							pw.println("dcloud" + idx + "-" + param.getName().concat("=[")
+									.concat(CONFIG.getString("dcloud" + idx, param)).concat("]"));
+						}
+					}
+				}
+
+				// dcloud server
+				final String storePass = cl.getOptionValue(Command.STORE_PASS.shortCmd);
+				final String keyPass = cl.getOptionValue(Command.KEY_PASS.shortCmd);
+				// if (LOG.isTraceEnabled()) {
+				// LOG.trace("storePass=[" + storePass + "]");
+				// LOG.trace("keyPass=[" + keyPass + "]");
+				// }
+				System.setProperty("sconfigPassword", storePass);
+				final DcloudSecureConfig sconfig = DcloudSecureConfig.getInstance();
+				pw.println(":: TEST CONNECTION TO DCLOUD SERVERS ::");
+				for (int i = 0; i < nbCloud; i++) {
+					final String idx = Integer.toString(i + 1);
+
+					final String client = CONFIG.getString("dcloud" + idx, DcloudConfig.Param.CLIENT);
+					final String credential = CONFIG.getString("dcloud" + idx, DcloudConfig.Param.CREDENTIAL);
+
+					final byte[] accessToken = sconfig.getByte(credential, keyPass);
+					final String strAccessToken = new String(accessToken, "UTF-8");
+
+					if (LOG.isTraceEnabled()) {
+						LOG.trace("client=[" + client + "]");
+						LOG.trace("credential=[" + credential + "]");
+						// LOG.trace("strAccessToken=[" + strAccessToken + "]");
+					}
+
+					pw.println("Connecting to dcloud" + idx + "...");
+					final ICloudClient cloudClient = CloudClientFactory.getCloudClient(client, strAccessToken);
+					pw.println(cloudClient.getClientInfo());
+				}
+
+				cmdLog = sw.toString();
+
+			}
+		} catch (UnsupportedEncodingException e) {
+			throw new DcloudSystemInternalRuntimeException(e.getMessage(), e);
+		} catch (ParseException e) {
+			if (LOG.isEnabledFor(Level.WARN)) {
+				LOG.warn(e.getMessage());
+			}
+			return this.execHelp(this.args[0]);
+		} finally {
+			this.closeCmdLogWriter(pw, sw);
+		}
+
+		return cmdLog;
 
 	}
 
@@ -395,92 +572,6 @@ public final class Cli {
 				return cmdLog;
 			}
 		}
-	}
-
-	private String execPing() {
-
-		final Options optsPing = this.buildOptsPing();
-
-		final String[] cmdArgs = new String[this.args.length - 1];
-		System.arraycopy(this.args, 1, cmdArgs, 0, cmdArgs.length);
-		if (LOG.isTraceEnabled()) {
-			LOG.trace("cmdArgs=[" + Arrays.toString(cmdArgs) + "]");
-		}
-
-		String cmdLog = null;
-		StringWriter sw = null;
-		PrintWriter pw = null;
-		try {
-			final CommandLine cl = clParser.parse(optsPing, cmdArgs);
-			Option[] opts = cl.getOptions();
-			if (opts.length < 1) {
-				cmdLog = this.execHelp(this.args[0]);
-			} else {
-
-				sw = new StringWriter();
-				pw = new PrintWriter(sw);
-
-				// Iterate config
-				final int nbCloud = CONFIG.getInt(DcloudConfig.Param.DCLOUD_COUNT);
-				pw.println(":: CONFIGURATIONS ::");
-				for (DcloudConfig.Param param : DcloudConfig.Param.values()) {
-					if (!DcloudConfig.Param.CLIENT.equals(param) && !DcloudConfig.Param.CREDENTIAL.equals(param)) {
-						pw.println(param.getName().concat("=[").concat(CONFIG.getString(param)).concat("]"));
-					} else {
-						for (int i = 0; i < nbCloud; i++) {
-							final String idx = Integer.toString(i + 1);
-							pw.println("dcloud" + idx + "-" + param.getName().concat("=[")
-									.concat(CONFIG.getString("dcloud" + idx, param)).concat("]"));
-						}
-					}
-				}
-
-				// dcloud server
-				final String storePass = cl.getOptionValue(Command.STORE_PASS.shortCmd);
-				final String keyPass = cl.getOptionValue(Command.KEY_PASS.shortCmd);
-				// if (LOG.isTraceEnabled()) {
-				// LOG.trace("storePass=[" + storePass + "]");
-				// LOG.trace("keyPass=[" + keyPass + "]");
-				// }
-				System.setProperty("sconfigPassword", storePass);
-				final DcloudSecureConfig sconfig = DcloudSecureConfig.getInstance();
-				pw.println(":: TEST CONNECTION TO DCLOUD SERVERS ::");
-				for (int i = 0; i < nbCloud; i++) {
-					final String idx = Integer.toString(i + 1);
-
-					final String client = CONFIG.getString("dcloud" + idx, DcloudConfig.Param.CLIENT);
-					final String credential = CONFIG.getString("dcloud" + idx, DcloudConfig.Param.CREDENTIAL);
-
-					final byte[] accessToken = sconfig.getByte(credential, keyPass);
-					final String strAccessToken = new String(accessToken, "UTF-8");
-
-					if (LOG.isTraceEnabled()) {
-						LOG.trace("client=[" + client + "]");
-						LOG.trace("credential=[" + credential + "]");
-						// LOG.trace("strAccessToken=[" + strAccessToken + "]");
-					}
-
-					pw.println("Connecting to dcloud" + idx + "...");
-					final ICloudClient cloudClient = CloudClientFactory.getCloudClient(client, strAccessToken);
-					pw.println(cloudClient.getClientInfo());
-				}
-
-				cmdLog = sw.toString();
-
-			}
-		} catch (UnsupportedEncodingException e) {
-			throw new DcloudSystemInternalRuntimeException(e.getMessage(), e);
-		} catch (ParseException e) {
-			if (LOG.isEnabledFor(Level.WARN)) {
-				LOG.warn(e.getMessage());
-			}
-			return this.execHelp(this.args[0]);
-		} finally {
-			this.closeCmdLogWriter(pw, sw);
-		}
-			
-		return cmdLog;
-	
 	}
 
 	private String execVersion() {

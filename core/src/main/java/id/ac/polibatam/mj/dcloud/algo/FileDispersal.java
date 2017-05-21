@@ -10,7 +10,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -41,21 +43,53 @@ public class FileDispersal {
 	private int[][] mSecretKey;
 	private int randomSeed = 0;
 
+	public FileDispersal(final int nbTarget, final int threshold) throws DcloudInvalidDataException {
+
+		if (nbTarget <= 2) {
+			throw new DcloudInvalidDataException("INVALID nbTarget=[" + nbTarget + "], length has to be > 2");
+		}
+
+		if (threshold <= 1 || threshold > nbTarget) {
+			throw new DcloudInvalidDataException(
+					"INVALID threshold, has to be in the range of 1 < threshold <= vSecrentKey.length");
+		}
+
+		final Random random = new Random();
+		final int[] vSecretKeyUnsigned = new int[nbTarget];
+		final Set<Integer> uniqueVSecretKeyUnsigned = new HashSet<Integer>();
+		while (uniqueVSecretKeyUnsigned.size() < vSecretKeyUnsigned.length) {
+			uniqueVSecretKeyUnsigned.add(Integer.valueOf(random.nextInt(256)));
+		}
+		int idx = 0;
+		for (Integer i : uniqueVSecretKeyUnsigned) {
+			vSecretKeyUnsigned[idx++] = i.intValue();
+		}
+
+		final byte[] vSecretKey = Converter.convertUnsignedByteToSignedByte(vSecretKeyUnsigned);
+		this.init(vSecretKey, threshold);
+
+	}
+
 	public FileDispersal(final byte[] vSecretKey, final int threshold) throws DcloudInvalidDataException {
 
-		if (null == vSecretKey || vSecretKey.length < 2) {
-			throw new DcloudInvalidDataException("INVALID vSecretKey, length has to be > 1");
+		if (null == vSecretKey || vSecretKey.length <= 2) {
+			throw new DcloudInvalidDataException("INVALID vSecretKey, length has to be > 2");
 		}
 
 		if (!ArrayUtils.isUnique(vSecretKey)) {
 			throw new DcloudInvalidDataException("INVALID vSecretKey, elements have to be unique");
 		}
 
-		if (threshold < 1 || threshold > vSecretKey.length) {
+		if (threshold <= 1 || threshold > vSecretKey.length) {
 			throw new DcloudInvalidDataException(
 					"INVALID threshold, has to be in the range of 1 < threshold <= vSecrentKey.length");
 		}
 
+		this.init(vSecretKey, threshold);
+
+	}
+
+	private void init(final byte[] vSecretKey, final int threshold) {
 		this.m = threshold;
 		this.n = vSecretKey.length;
 		final int[] unsignedVSecretKey = Converter.convertSignedByteToUnsignedByte(vSecretKey);

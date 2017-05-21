@@ -73,7 +73,7 @@ public class FileDispersalReconstructTest {
 
 	}
 
-	private void disperseReconstruct (final File origFile, final boolean salt) {
+	private void disperseReconstruct1 (final File origFile, final boolean salt) {
 
 		Throwable t1 = null;
 		try {
@@ -103,12 +103,43 @@ public class FileDispersalReconstructTest {
 
 	}
 
+	private void disperseReconstruct2 (final File origFile, final boolean salt) {
+
+		Throwable t1 = null;
+		try {
+
+			final FileDispersal fileD = new FileDispersal(nbTarget, threshold);
+			File[] dispersedFile = fileD.disperse(origFile, this.outputDir, salt);
+
+			final File reconFile = new File(
+					this.outputDir.getAbsolutePath().concat(File.separator).concat(origFile.getName()));
+
+			final FileReconstruct fileR = new FileReconstruct();
+
+			final File[] dispersedFileStar1 = new File[] { dispersedFile[3], dispersedFile[0], dispersedFile[4] };
+			fileR.reconstruct(dispersedFileStar1, reconFile, salt);
+
+			final File[] dispersedFileStar2 = new File[] { dispersedFile[0], dispersedFile[1], dispersedFile[2] };
+			fileR.reconstruct(dispersedFileStar2, reconFile, salt);
+
+			final File[] dispersedFileStar3 = new File[] { dispersedFile[4], dispersedFile[1], dispersedFile[2] };
+			fileR.reconstruct(dispersedFileStar3, reconFile, salt);
+
+		} catch (BaseDcloudException e) {
+			LOG.error(e.getMessage(), e);
+			t1 = e;
+		}
+		assertNull(t1);
+
+	}
+	
+	
 	@Test
 	public void testDisperseReconstructNoSalt() {
-		this.disperseReconstruct(origFile1, false);
-		this.disperseReconstruct(origFile1, true);
-		this.disperseReconstruct(origFile2, false);
-		this.disperseReconstruct(origFile2, true);
+		this.disperseReconstruct1(origFile1, false);
+		this.disperseReconstruct1(origFile1, true);
+		this.disperseReconstruct2(origFile2, false);
+		this.disperseReconstruct2(origFile2, true);
 	}
 
 }

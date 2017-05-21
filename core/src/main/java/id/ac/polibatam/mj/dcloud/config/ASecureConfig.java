@@ -18,10 +18,9 @@ public abstract class ASecureConfig extends AConfig {
 
 	protected JCEKSKey keyStore = null;
 
-	protected abstract String getConfigFileName();
-
 	protected abstract String getConfigFilePassword();
 
+	@Override
 	protected void loadConfigProperties() {
 		final URL url = ClassLoader.getSystemResource(this.getConfigFileName());
 		if (null == url) {

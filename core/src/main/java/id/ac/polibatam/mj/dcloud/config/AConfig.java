@@ -24,4 +24,10 @@ public abstract class AConfig {
 		public String getPattern();
 	}
 
+	protected abstract String getConfigFileName();
+
+	protected abstract void loadConfigProperties();
+
+	protected abstract void validateConfig();
+
 }
