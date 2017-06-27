@@ -1,5 +1,7 @@
 package id.ac.polibatam.mj.dcloud.config;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -10,6 +12,7 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
 
 import id.ac.polibatam.mj.dcloud.exception.runtime.DcloudInvalidConfigurationRuntimeException;
+import id.ac.polibatam.mj.dcloud.exception.runtime.DcloudSystemInternalRuntimeException;
 
 public abstract class APlainConfig extends AConfig {
 
@@ -25,7 +28,7 @@ public abstract class APlainConfig extends AConfig {
 					"LOADING NON-EXIST config-file=[" + this.getConfigFileName() + "]");
 		}
 		try {
-			this.configFileURL = url.getFile();
+			this.configFileURL = (new URI(url.toString())).getPath();
 			if (LOG.isInfoEnabled()) {
 				LOG.info("LOADING config-file=[" + this.configFileURL + "]");
 			}
@@ -36,6 +39,8 @@ public abstract class APlainConfig extends AConfig {
 			this.configProperties = propConfig;
 		} catch (ConfigurationException e) {
 			throw new DcloudInvalidConfigurationRuntimeException(e.getMessage(), e);
+		} catch (URISyntaxException e) {
+			throw new DcloudSystemInternalRuntimeException(e.getMessage(), e);
 		}
 	}
 

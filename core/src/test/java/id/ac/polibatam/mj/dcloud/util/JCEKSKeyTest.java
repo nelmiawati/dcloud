@@ -7,6 +7,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 
@@ -141,7 +143,10 @@ public class JCEKSKeyTest {
 						"LOADING NON-EXIST config-file=[" + KEYSTORE_FILE_NAME + "]");
 			}
 
-			this.keys = new JCEKSKey(new File(url.getFile()), KEYSTORE_PASSWORD);
+			this.keys = new JCEKSKey(new File((new URI(url.toString())).getPath()), KEYSTORE_PASSWORD);
+		} catch (URISyntaxException e) {
+			LOG.error(e.getMessage(), e);
+			throw new DcloudSystemInternalRuntimeException(e.getMessage(), e);
 		} catch (DcloudSystemInternalException e) {
 			LOG.error(e.getMessage(), e);
 			throw new DcloudSystemInternalRuntimeException(e.getMessage(), e);

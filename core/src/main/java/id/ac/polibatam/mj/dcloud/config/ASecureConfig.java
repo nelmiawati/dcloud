@@ -1,6 +1,8 @@
 package id.ac.polibatam.mj.dcloud.config;
 
 import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 import org.apache.commons.lang.StringUtils;
@@ -28,14 +30,16 @@ public abstract class ASecureConfig extends AConfig {
 					"LOADING NON-EXIST config-file=[" + this.getConfigFileName() + "]");
 		}
 		try {
-			this.configFileURL = url.getFile();
+			this.configFileURL = (new URI(url.toString())).getPath();
 			if (LOG.isInfoEnabled()) {
 				LOG.info("LOADING config-file=[" + this.configFileURL + "]");
 			}
-			this.keyStore = new JCEKSKey(new File(url.getFile()), this.getConfigFilePassword());
+			this.keyStore = new JCEKSKey(new File(this.configFileURL), this.getConfigFilePassword());
 		} catch (DcloudInvalidDataException e) {
 			throw new DcloudInvalidDataRuntimeException(e.getMessage(), e);
 		} catch (DcloudSystemInternalException e) {
+			throw new DcloudSystemInternalRuntimeException(e.getMessage(), e);
+		} catch (URISyntaxException e) {
 			throw new DcloudSystemInternalRuntimeException(e.getMessage(), e);
 		}
 	}

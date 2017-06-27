@@ -3,6 +3,8 @@ package id.ac.polibatam.mj.dcloud.algo;
 import static org.junit.Assert.assertNull;
 
 import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Random;
 
@@ -13,6 +15,7 @@ import org.junit.Test;
 
 import id.ac.polibatam.mj.dcloud.exception.BaseDcloudException;
 import id.ac.polibatam.mj.dcloud.exception.runtime.DcloudInvalidConfigurationRuntimeException;
+import id.ac.polibatam.mj.dcloud.exception.runtime.DcloudSystemInternalRuntimeException;
 import id.ac.polibatam.mj.dcloud.util.Converter;
 
 public class FileDispersalReconstructTest {
@@ -58,7 +61,11 @@ public class FileDispersalReconstructTest {
 		if (null == url) {
 			throw new DcloudInvalidConfigurationRuntimeException("file=[" + fileName + "] is NOT existing");
 		} else {
-			file = new File(url.getFile());
+			try {
+				file = new File((new URI(url.toString())).getPath());
+			} catch (URISyntaxException e) {
+				throw new DcloudSystemInternalRuntimeException(e.getMessage(), e);
+			}
 			LOG.trace("file=[" + file.getAbsolutePath() + "]");
 		}
 		return file;
