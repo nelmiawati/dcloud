@@ -62,11 +62,11 @@ public final class Cli {
 		/**
 		 * 
 		 */
-		LIST("ls", "list", "List of files/directories inside a directory of the cloud. Argument is a directory at the cloud to be listed its contents."),
+		LIST("ls", "list", "List of files/directories inside a directory of the cloud."),
 		/**
 		 * 
 		 */
-		REMOVE("rm", "remove", "Remove a file at the cloud. Argument is full path of the file to be removed from the cloud."),
+		REMOVE("rm", "remove", "Remove a file at the cloud."),
 		/**
 		 * 
 		 */
@@ -182,6 +182,7 @@ public final class Cli {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("##### UPLOAD #####");
 					}
+					//TODO:
 					return "##### UPLOAD #####";
 
 				}
@@ -189,6 +190,7 @@ public final class Cli {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("##### DOWNLOAD #####");
 					}
+					//TODO:
 					return "##### DOWNLOAD #####";
 
 				}
@@ -196,6 +198,7 @@ public final class Cli {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("##### LIST #####");
 					}
+					//TODO:
 					return "##### LIST #####";
 
 				}
@@ -203,6 +206,7 @@ public final class Cli {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("##### REMOVE #####");
 					}
+					//TODO:
 					return "##### REMOVE #####";
 
 				}
@@ -263,6 +267,7 @@ public final class Cli {
 
 	}
 
+	//TODO:
 	private String execUpload() throws DcloudInvalidDataException {
 
 		final Options optsUpload = this.buildOptsUpload();
