@@ -41,8 +41,8 @@ public class DropBoxClient implements ICloudClient {
     public void upload(final String fromLocal, final String toRemote)
             throws DcloudInvalidDataException, DcloudSystemInternalException, DcloudSystemExternalException {
 
-        final File file = new File(fromLocal);
-        if (!file.exists() || !file.isFile()) {
+        final File fFromLocal = new File(fromLocal);
+        if (!fFromLocal.exists() || !fFromLocal.isFile()) {
             throw new DcloudInvalidDataException("[" + fromLocal + "] is not a valid local file");
         }
 
@@ -50,13 +50,13 @@ public class DropBoxClient implements ICloudClient {
         UploadUploader uploader = null;
         try {
 
-            fis = new FileInputStream(file);
+            fis = new FileInputStream(fFromLocal);
 
-            uploader = this.dbxClient.files().upload(toRemote);
+            uploader = this.dbxClient.files().uploadBuilder(toRemote).withMode(WriteMode.OVERWRITE).start();
             final FileMetadata meta = uploader.uploadAndFinish(fis);
 
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Uploading into remote file=[" + meta.getName() + "]");
+                LOG.debug("Uploading from local file=[" + fFromLocal.getAbsolutePath() + "] into remote file=[" + meta.getPathDisplay() + "]");
             }
 
         } catch (FileNotFoundException e) {
@@ -88,17 +88,18 @@ public class DropBoxClient implements ICloudClient {
             throw new DcloudInvalidDataException("[" + fromRemote + "] is not a valid remote file");
         }
 
+        final File fToLocal = new File(toLocal);
         FileOutputStream fos = null;
         DbxDownloader<FileMetadata> downloader = null;
         try {
 
-            fos = new FileOutputStream(toLocal);
+            fos = new FileOutputStream(fToLocal);
             downloader = this.dbxClient.files().download(fromRemote);
             final FileMetadata meta = downloader.download(fos);
             fos.flush();
 
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Downloading from remote file=[" + meta.getName() + "]");
+                LOG.debug("Downloading from remote file=[" + meta.getPathDisplay() + "] into local file=[" + fToLocal.getAbsolutePath() + "]");
             }
 
         } catch (FileNotFoundException e) {
@@ -133,7 +134,7 @@ public class DropBoxClient implements ICloudClient {
 
             final DeleteResult delResult = this.dbxClient.files().deleteV2(fileRemote);
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Deleting remote file=[" + delResult.getMetadata().getName() + "]");
+                LOG.debug("Deleting remote file=[" + delResult.getMetadata().getPathDisplay() + "]");
             }
 
         } catch (DbxException e) {
@@ -181,7 +182,7 @@ public class DropBoxClient implements ICloudClient {
     public FileType getType(final String objRemote) throws BaseDcloudException {
 
         if (null == objRemote) {
-            throw new DcloudInvalidDataException("[" + objRemote + "] is not a valid remote directory");
+            throw new DcloudInvalidDataException("[" + objRemote + "] is not a valid remote file or directory");
         } else if ("/".equals(objRemote) || "".equals(objRemote)) {
             return FileType.DIRECTORY;
         }
@@ -190,7 +191,7 @@ public class DropBoxClient implements ICloudClient {
         try {
             final Metadata meta = this.dbxClient.files().getMetadata(objRemote);
             if (null == meta) {
-                throw new DcloudInvalidDataException("[" + objRemote + "] is not avalid remote file or directory");
+                throw new DcloudInvalidDataException("[" + objRemote + "] is not a valid remote file or directory");
             }
             if (meta instanceof FileMetadata) {
                 type = FileType.FILE;
