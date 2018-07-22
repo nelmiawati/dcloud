@@ -4,10 +4,12 @@
 package id.ac.polibatam.mj.dcloud.util;
 
 import id.ac.polibatam.mj.dcloud.algo.FileDispersal;
+import id.ac.polibatam.mj.dcloud.algo.FileReconstruct;
 import id.ac.polibatam.mj.dcloud.config.DcloudConfig;
 import id.ac.polibatam.mj.dcloud.config.DcloudSecureConfig;
 import id.ac.polibatam.mj.dcloud.exception.BaseDcloudException;
 import id.ac.polibatam.mj.dcloud.exception.DcloudInvalidDataException;
+import id.ac.polibatam.mj.dcloud.exception.DcloudSystemExternalException;
 import id.ac.polibatam.mj.dcloud.exception.DcloudSystemInternalException;
 import id.ac.polibatam.mj.dcloud.exception.runtime.DcloudSystemInternalRuntimeException;
 import id.ac.polibatam.mj.dcloud.io.CloudClientFactory;
@@ -19,10 +21,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author mia
@@ -86,8 +85,7 @@ public final class Cli {
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("##### DOWNLOAD #####");
                         }
-                        //TODO:
-                        return "##### DOWNLOAD #####";
+                        return this.execDownload();
 
                     }
                     case LIST: {
@@ -212,8 +210,9 @@ public final class Cli {
 
                     // Disperse File
                     final FileDispersal fileD = new FileDispersal(nbCloud, threshold);
-                    pw.println(":: DISPERSING FILE [" + fromLocal + "] INTO [" + nbCloud + "] WITH SALT [" + useSalt + "] ::");
+                    pw.println(":: DISPERSING FILE [" + fromLocal + "] AT LOCAL INTO [" + toRemote + "] AT DCLOUD SERVERS WITH #CLOUD=[" + nbCloud + "] AND SALT [" + useSalt + "] ::");
                     dispersedFile = fileD.disperse(input, new File(localWs), useSalt);
+                    pw.println("SUCCESS dispersing");
 
                     // dcloud server
                     System.setProperty("sconfigPassword", storePass);
@@ -234,11 +233,11 @@ public final class Cli {
                             // LOG.trace("strAccessToken=[" + strAccessToken + "]");
                         }
 
-                        pw.println("Upload to dcloud" + idx + "...");
+                        pw.println("Upload file [" + toRemote + "] to dcloud" + idx + "...");
                         final ICloudClient cloudClient = CloudClientFactory.getCloudClient(client, strAccessToken);
                         try {
-                            cloudClient.upload(dispersedFile[i].getAbsolutePath(),toRemote);
-                            pw.println("SUCCESS uploading to dcloud" + idx + "...");
+                            cloudClient.upload(dispersedFile[i].getAbsolutePath(), toRemote);
+                            pw.println("SUCCESS uploading file [" + toRemote + "] to dcloud" + idx + "...");
                         } catch (BaseDcloudException e) {
                             pw.println(e.getMessage());
                             if (LOG.isEnabledFor(Level.ERROR)) {
@@ -262,7 +261,7 @@ public final class Cli {
                     pw.println();
                 } finally {
                     if (null != dispersedFile) {
-                        for (File f: dispersedFile) {
+                        for (File f : dispersedFile) {
                             f.delete();
                         }
                     }
@@ -285,6 +284,147 @@ public final class Cli {
         return cmdLog;
 
     }
+
+
+    private String execDownload() {
+
+        final Options optsDownload = this.buildOptsDownload();
+
+        final String[] cmdArgs = new String[this.args.length - 1];
+        System.arraycopy(this.args, 1, cmdArgs, 0, cmdArgs.length);
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("cmdArgs=[" + Arrays.toString(cmdArgs) + "]");
+        }
+
+        String cmdLog = null;
+        StringWriter sw = null;
+        PrintWriter pw = null;
+        try {
+            final CommandLine cl = clParser.parse(optsDownload, cmdArgs);
+            Option[] opts = cl.getOptions();
+            if (opts.length < 4) {
+                cmdLog = this.execHelp(this.args[0]);
+            } else {
+
+                sw = new StringWriter();
+                pw = new PrintWriter(sw);
+
+                // Get cloud details
+                final int nbCloud = CONFIG.getInt(DcloudConfig.Param.DCLOUD_COUNT);
+                final String localWs = CONFIG.getString(DcloudConfig.Param.DCLOUD_LOCAL_WORKSPACE);
+                final int threshold = CONFIG.getInt(DcloudConfig.Param.DCLOUD_THRESHOLD);
+                final boolean useSalt = CONFIG.getBoolean(DcloudConfig.Param.DCLOUD_USE_SALT);
+
+                // Get input parameters
+                final String storePass = cl.getOptionValue(Command.STORE_PASS.shortCmd);
+                final String keyPass = cl.getOptionValue(Command.KEY_PASS.shortCmd);
+                final String fromRemote = cl.getOptionValue(Command.FROM_REMOTE.shortCmd);
+                final String toLocal = cl.getOptionValue(Command.TO_LOCAL.shortCmd);
+                // if (LOG.isTraceEnabled()) {
+                // LOG.trace("storePass=[" + storePass + "]");
+                // LOG.trace("keyPass=[" + keyPass + "]");
+                // }
+
+                final List<File> dispersedFiles = new ArrayList<File>();
+                try {
+
+                    // dcloud server
+                    System.setProperty("sconfigPassword", storePass);
+                    final DcloudSecureConfig sconfig = DcloudSecureConfig.getInstance();
+                    pw.println(":: DOWNLOAD FILE [" + fromRemote + "] AT LOCAL INTO FILE [" + fromRemote + ".i]] AT DCLOUD SERVERS ::");
+                    for (int i = 0; i < nbCloud; i++) {
+                        final String idx = Integer.toString(i + 1);
+
+                        final String client = CONFIG.getString("dcloud" + idx, DcloudConfig.Param.CLIENT);
+                        final String credential = CONFIG.getString("dcloud" + idx, DcloudConfig.Param.CREDENTIAL);
+
+                        final byte[] accessToken = sconfig.getByte(credential, keyPass);
+                        final String strAccessToken = new String(accessToken, "UTF-8");
+
+                        if (LOG.isTraceEnabled()) {
+                            LOG.trace("client=[" + client + "]");
+                            LOG.trace("credential=[" + credential + "]");
+                            // LOG.trace("strAccessToken=[" + strAccessToken + "]");
+                        }
+
+                        pw.println("Download file [" + fromRemote + "] from dcloud" + idx + "...");
+                        final ICloudClient cloudClient = CloudClientFactory.getCloudClient(client, strAccessToken);
+                        try {
+                            final String dispersedFileName = (new StringBuilder(localWs)).append(File.separator).append(fromRemote).append(".").append(i).toString();
+                            cloudClient.download(fromRemote, dispersedFileName);
+
+                            final File dispersedFile = new File(dispersedFileName);
+                            if (!dispersedFile.exists()) {
+                                throw new DcloudSystemExternalException("FAIL downloading file [" + fromRemote + "] from dcloud" + idx + "...");
+                            }
+
+                            dispersedFiles.add(dispersedFile);
+
+                            pw.println("SUCCESS downloading file [" + fromRemote + "] from dcloud" + idx + "...");
+                        } catch (BaseDcloudException e) {
+                            pw.println(e.getMessage());
+                            if (LOG.isEnabledFor(Level.ERROR)) {
+                                LOG.error(e.getMessage(), e);
+                            }
+                        }
+                    }
+
+
+                    //Construct File
+
+                    final File fLocal = new File(toLocal);
+                    pw.println(":: CONSTRUCTING FILE [" + fromRemote + "] FROM CLOUD SERVERS INTO [" + fLocal.getAbsolutePath() + "] AT LOCAL WITH #CLOUD=[" + nbCloud + "] AND THRESHOLD [" + threshold + "] AND SALT [" + useSalt + "] ::");
+                    if (dispersedFiles.size() < threshold) {
+                        throw new DcloudSystemInternalException("FAIL dispersing file due to #file downloaded = [" + dispersedFiles.size() + "], less than threshold=[" + threshold + "]");
+                    }
+                    final File[] dispersedFileStar1 = new File[]{dispersedFiles.get(0), dispersedFiles.get(1), dispersedFiles.get(2)};
+
+                    if (fLocal.exists()) {
+                        throw new DcloudSystemInternalException("FAIL constructing file due to toLocal=[" + fLocal.getAbsolutePath() + "] is existing");
+                    }
+                    final FileReconstruct fileR = new FileReconstruct();
+                    fileR.reconstruct(dispersedFileStar1, fLocal, useSalt);
+                    pw.println("SUCCESS constructing");
+
+                    pw.println();
+
+                } catch (DcloudSystemInternalException e) {
+                    pw.println(e.getMessage());
+                    if (LOG.isEnabledFor(Level.ERROR)) {
+                        LOG.error(e.getMessage(), e);
+                    }
+                    pw.println();
+                } catch (DcloudInvalidDataException e) {
+                    pw.println(e.getMessage());
+                    if (LOG.isEnabledFor(Level.ERROR)) {
+                        LOG.error(e.getMessage(), e);
+                    }
+                    pw.println();
+                } finally {
+                    for (File f : dispersedFiles) {
+                        f.delete();
+                    }
+                }
+            }
+
+            cmdLog = sw.toString();
+
+
+        } catch (UnsupportedEncodingException e) {
+            throw new DcloudSystemInternalRuntimeException(e.getMessage(), e);
+        } catch (ParseException e) {
+            if (LOG.isEnabledFor(Level.WARN)) {
+                LOG.warn(e.getMessage());
+            }
+            return this.execHelp(this.args[0]);
+        } finally {
+            this.closeCmdLogWriter(pw, sw);
+        }
+
+        return cmdLog;
+
+    }
+
 
     private String execList() {
 
