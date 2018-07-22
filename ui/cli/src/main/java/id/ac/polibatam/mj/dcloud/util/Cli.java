@@ -7,6 +7,7 @@ import id.ac.polibatam.mj.dcloud.algo.FileDispersal;
 import id.ac.polibatam.mj.dcloud.config.DcloudConfig;
 import id.ac.polibatam.mj.dcloud.config.DcloudConfig.Param;
 import id.ac.polibatam.mj.dcloud.config.DcloudSecureConfig;
+import id.ac.polibatam.mj.dcloud.exception.BaseDcloudException;
 import id.ac.polibatam.mj.dcloud.exception.DcloudInvalidDataException;
 import id.ac.polibatam.mj.dcloud.exception.runtime.DcloudSystemInternalRuntimeException;
 import id.ac.polibatam.mj.dcloud.io.CloudClientFactory;
@@ -29,7 +30,7 @@ import java.util.Map;
 public final class Cli {
 
     private static final Logger LOG = Logger.getLogger(Cli.class);
-    private static final String DCLOUD_VERSION = ":: dCLOUD v1.0 :: miarifSOFT :: copyright (r) 2017";
+    private static final String DCLOUD_VERSION = ":: dCLOUD v1.0 :: miarifSOFT :: copyright (r) 2018";
 
     private static final int HELP_WIDTH = 640;
     private static final int HELP_LEFT_PAD = 4;
@@ -93,8 +94,7 @@ public final class Cli {
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("##### LIST #####");
                         }
-                        //TODO:
-                        return "##### LIST #####";
+                        return this.execList();
 
                     }
                     case REMOVE: {
@@ -250,6 +250,89 @@ public final class Cli {
         return cmdLog;
     }
 
+
+    private String execList() {
+
+        final Options optsList = this.buildOptsList();
+
+        final String[] cmdArgs = new String[this.args.length - 1];
+        System.arraycopy(this.args, 1, cmdArgs, 0, cmdArgs.length);
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("cmdArgs=[" + Arrays.toString(cmdArgs) + "]");
+        }
+        final String remoteDirName = cmdArgs[0];
+
+        String cmdLog = null;
+        StringWriter sw = null;
+        PrintWriter pw = null;
+        try {
+            final CommandLine cl = clParser.parse(optsList, cmdArgs);
+            Option[] opts = cl.getOptions();
+            if (opts.length < 2) {
+                cmdLog = this.execHelp(this.args[0]);
+            } else {
+
+                sw = new StringWriter();
+                pw = new PrintWriter(sw);
+                final int nbCloud = CONFIG.getInt(DcloudConfig.Param.DCLOUD_COUNT);
+
+                // dcloud server
+                final String storePass = cl.getOptionValue(Command.STORE_PASS.shortCmd);
+                final String keyPass = cl.getOptionValue(Command.KEY_PASS.shortCmd);
+                // if (LOG.isTraceEnabled()) {
+                // LOG.trace("storePass=[" + storePass + "]");
+                // LOG.trace("keyPass=[" + keyPass + "]");
+                // }
+                System.setProperty("sconfigPassword", storePass);
+                final DcloudSecureConfig sconfig = DcloudSecureConfig.getInstance();
+                pw.println(":: LIST DIRECTORY ["+remoteDirName+"] AT DCLOUD SERVERS ::");
+                for (int i = 0; i < nbCloud; i++) {
+                    final String idx = Integer.toString(i + 1);
+
+                    final String client = CONFIG.getString("dcloud" + idx, DcloudConfig.Param.CLIENT);
+                    final String credential = CONFIG.getString("dcloud" + idx, DcloudConfig.Param.CREDENTIAL);
+
+                    final byte[] accessToken = sconfig.getByte(credential, keyPass);
+                    final String strAccessToken = new String(accessToken, "UTF-8");
+
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("client=[" + client + "]");
+                        LOG.trace("credential=[" + credential + "]");
+                        // LOG.trace("strAccessToken=[" + strAccessToken + "]");
+                    }
+
+                    pw.println("List directory ["+remoteDirName+"] at dcloud" + idx + "...");
+                    final ICloudClient cloudClient = CloudClientFactory.getCloudClient(client, strAccessToken);
+                    try {
+                        pw.println(cloudClient.list(remoteDirName));
+                    } catch (BaseDcloudException e) {
+                        pw.println(e.getMessage());
+                        if (LOG.isEnabledFor(Level.ERROR)) {
+                            LOG.error(e.getMessage(), e);
+                        }
+                    }
+                }
+                pw.println();
+
+                cmdLog = sw.toString();
+
+            }
+        } catch (UnsupportedEncodingException e) {
+            throw new DcloudSystemInternalRuntimeException(e.getMessage(), e);
+        } catch (ParseException e) {
+            if (LOG.isEnabledFor(Level.WARN)) {
+                LOG.warn(e.getMessage());
+            }
+            return this.execHelp(this.args[0]);
+        } finally {
+            this.closeCmdLogWriter(pw, sw);
+        }
+
+        return cmdLog;
+
+    }
+
+
     private String execPing() {
 
         final Options optsPing = this.buildOptsPing();
@@ -272,9 +355,9 @@ public final class Cli {
 
                 sw = new StringWriter();
                 pw = new PrintWriter(sw);
+                final int nbCloud = CONFIG.getInt(DcloudConfig.Param.DCLOUD_COUNT);
 
                 // Iterate config
-                final int nbCloud = CONFIG.getInt(DcloudConfig.Param.DCLOUD_COUNT);
                 pw.println(":: CONFIGURATIONS ::");
                 for (DcloudConfig.Param param : DcloudConfig.Param.values()) {
                     if (!DcloudConfig.Param.CLIENT.equals(param) && !DcloudConfig.Param.CREDENTIAL.equals(param)) {
@@ -287,6 +370,7 @@ public final class Cli {
                         }
                     }
                 }
+                pw.println();
 
                 // dcloud server
                 final String storePass = cl.getOptionValue(Command.STORE_PASS.shortCmd);
@@ -317,6 +401,7 @@ public final class Cli {
                     final ICloudClient cloudClient = CloudClientFactory.getCloudClient(client, strAccessToken);
                     pw.println(cloudClient.getClientInfo());
                 }
+                pw.println();
 
                 cmdLog = sw.toString();
 
@@ -359,7 +444,7 @@ public final class Cli {
                                 "-" + Command.UPLOAD.shortCmd + "," + "--" + Command.UPLOAD.longCmd
                                         + " <param1> ... <paramN>",
                                 Command.UPLOAD.getDesc() + " Following are parameters for this command: ",
-                                this.buildOptsUpload(), HELP_LEFT_PAD, HELP_DESC_PAD, null);
+                                this.buildOptsUpload(), HELP_LEFT_PAD, HELP_DESC_PAD, null, true);
                         cmdLog = sw.toString();
                         // this.helpFormatter.printHelp(
                         // "-" + Command.UPLOAD.shortCmd + "," + "--" +
@@ -375,7 +460,7 @@ public final class Cli {
                                 "-" + Command.DOWNLOAD.shortCmd + "," + "--" + Command.DOWNLOAD.longCmd
                                         + " <param1> ... <paramN>",
                                 Command.DOWNLOAD.getDesc() + " Following are parameters for this command: ",
-                                this.buildOptsDownload(), HELP_LEFT_PAD, HELP_DESC_PAD, null);
+                                this.buildOptsDownload(), HELP_LEFT_PAD, HELP_DESC_PAD, null, true);
                         cmdLog = sw.toString();
                         // this.helpFormatter.printHelp(
                         // "-" + Command.DOWNLOAD.shortCmd + "," + "--" +
@@ -389,9 +474,9 @@ public final class Cli {
                     case LIST: {
                         this.helpFormatter.printHelp(pw, HELP_WIDTH,
                                 "-" + Command.LIST.shortCmd + "," + "--" + Command.LIST.longCmd
-                                        + " <arg> <param1> ... <paramN>",
+                                        + " <remoteDirName>",
                                 Command.LIST.getDesc() + " Following are parameters for this command: ",
-                                this.buildOptsList(), HELP_LEFT_PAD, HELP_DESC_PAD, null);
+                                this.buildOptsList(), HELP_LEFT_PAD, HELP_DESC_PAD, null, true);
                         cmdLog = sw.toString();
                         // this.helpFormatter.printHelp(
                         // "-" + Command.LIST.shortCmd + "," + "--" +
@@ -405,9 +490,9 @@ public final class Cli {
                     case REMOVE: {
                         this.helpFormatter.printHelp(pw, HELP_WIDTH,
                                 "-" + Command.REMOVE.shortCmd + "," + "--" + Command.REMOVE.longCmd
-                                        + " <arg> <param1> <paramN>",
+                                        + " <arg> <param1> ... <paramN>",
                                 Command.REMOVE.getDesc() + " Following are parameters for this command: ",
-                                this.buildOptsRemove(), HELP_LEFT_PAD, HELP_DESC_PAD, null);
+                                this.buildOptsRemove(), HELP_LEFT_PAD, HELP_DESC_PAD, null, true);
                         cmdLog = sw.toString();
                         // this.helpFormatter.printHelp(
                         // "-" + Command.REMOVE.shortCmd + "," + "--" +
@@ -422,7 +507,7 @@ public final class Cli {
                         this.helpFormatter.printHelp(pw, HELP_WIDTH,
                                 "-" + Command.PING.shortCmd + "," + "--" + Command.PING.longCmd + " <param1> ... <paramN>",
                                 Command.PING.getDesc() + " Following are parameters for this command: ",
-                                this.buildOptsPing(), HELP_LEFT_PAD, HELP_DESC_PAD, null);
+                                this.buildOptsPing(), HELP_LEFT_PAD, HELP_DESC_PAD, null, true);
                         cmdLog = sw.toString();
                         // this.helpFormatter.printHelp(
                         // "-" + Command.PING.shortCmd + "," + "--" +
@@ -436,8 +521,8 @@ public final class Cli {
                     case VERSION: {
                         this.helpFormatter.printHelp(pw, HELP_WIDTH,
                                 "-" + Command.VERSION.shortCmd + "," + "--" + Command.VERSION.longCmd,
-                                Command.VERSION.getDesc() + " Following are parameters for this command: ", new Options(),
-                                HELP_LEFT_PAD, HELP_DESC_PAD, null);
+                                Command.VERSION.getDesc(), new Options(),
+                                HELP_LEFT_PAD, HELP_DESC_PAD, null, true);
                         cmdLog = sw.toString();
                         // this.helpFormatter.printHelp(
                         // "-" + Command.VERSION.shortCmd + "," + "--" +
@@ -450,9 +535,9 @@ public final class Cli {
                     }
                     case HELP: {
                         this.helpFormatter.printHelp(pw, HELP_WIDTH,
-                                "-" + Command.REMOVE.shortCmd + "," + "--" + Command.REMOVE.longCmd + " <arg>",
-                                Command.HELP.desc + " Following are parameters for this command: ", new Options(),
-                                HELP_LEFT_PAD, HELP_DESC_PAD, null);
+                                "-" + Command.HELP.shortCmd + "," + "--" + Command.HELP.longCmd + " <commandShort|commandLong>",
+                                Command.HELP.desc, new Options(),
+                                HELP_LEFT_PAD, HELP_DESC_PAD, null, true);
                         cmdLog = sw.toString();
                         // this.helpFormatter.printHelp(
                         // "-" + Command.REMOVE.shortCmd + "," + "--" +

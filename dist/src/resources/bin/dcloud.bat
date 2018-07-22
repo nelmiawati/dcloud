@@ -3,12 +3,17 @@
 ::
 @echo off
 
+SETLOCAL 
+cd /D "%~dp0"
+
 :: Java Home that is compatible to run binary compiled under Java $java.version
 :: set JAVA_HOME=
 
-set JARS=
-set CLASSPATH=
-for %%i in (..\lib\*.jar) do call cappend.bat %%i
-set CLASSPATH=%JARS%;..\conf
+SET JARS=
+SET CLASSPATH=
+FOR %%i IN (..\lib\*.jar) DO CALL cappend.bat %%i
+SET CLASSPATH=%JARS%;..\conf
 
 "%JAVA_HOME%\bin\java" -cp %CLASSPATH% id.ac.polibatam.mj.dcloud.main.DcloudMain %*
+
+ENDLOCAL
