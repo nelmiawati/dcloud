@@ -40,6 +40,7 @@ public final class Cli {
     private CommandLineParser clParser = null;
     private HelpFormatter helpFormatter = null;
     private String[] args;
+
     /**
      * @param args
      */
@@ -102,7 +103,7 @@ public final class Cli {
                             LOG.debug("##### REMOVE #####");
                         }
                         //TODO:
-                        return "##### REMOVE #####";
+                        return this.execRemove();
 
                     }
                     case PING: {
@@ -285,7 +286,7 @@ public final class Cli {
                 // }
                 System.setProperty("sconfigPassword", storePass);
                 final DcloudSecureConfig sconfig = DcloudSecureConfig.getInstance();
-                pw.println(":: LIST DIRECTORY ["+remoteDirName+"] AT DCLOUD SERVERS ::");
+                pw.println(":: LIST DIRECTORY [" + remoteDirName + "] AT DCLOUD SERVERS ::");
                 for (int i = 0; i < nbCloud; i++) {
                     final String idx = Integer.toString(i + 1);
 
@@ -301,10 +302,93 @@ public final class Cli {
                         // LOG.trace("strAccessToken=[" + strAccessToken + "]");
                     }
 
-                    pw.println("List directory ["+remoteDirName+"] at dcloud" + idx + "...");
+                    pw.println("List directory [" + remoteDirName + "] at dcloud" + idx + "...");
                     final ICloudClient cloudClient = CloudClientFactory.getCloudClient(client, strAccessToken);
                     try {
                         pw.println(cloudClient.list(remoteDirName));
+                        pw.println("SUCCESS listing directory [" + remoteDirName + "] at dcloud" + idx + "...");
+                    } catch (BaseDcloudException e) {
+                        pw.println(e.getMessage());
+                        if (LOG.isEnabledFor(Level.ERROR)) {
+                            LOG.error(e.getMessage(), e);
+                        }
+                    }
+                }
+                pw.println();
+
+                cmdLog = sw.toString();
+
+            }
+        } catch (UnsupportedEncodingException e) {
+            throw new DcloudSystemInternalRuntimeException(e.getMessage(), e);
+        } catch (ParseException e) {
+            if (LOG.isEnabledFor(Level.WARN)) {
+                LOG.warn(e.getMessage());
+            }
+            return this.execHelp(this.args[0]);
+        } finally {
+            this.closeCmdLogWriter(pw, sw);
+        }
+
+        return cmdLog;
+
+    }
+
+    private String execRemove() {
+
+        final Options optsRemove = this.buildOptsRemove();
+
+        final String[] cmdArgs = new String[this.args.length - 1];
+        System.arraycopy(this.args, 1, cmdArgs, 0, cmdArgs.length);
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("cmdArgs=[" + Arrays.toString(cmdArgs) + "]");
+        }
+        final String remoteFileName = cmdArgs[0];
+
+        String cmdLog = null;
+        StringWriter sw = null;
+        PrintWriter pw = null;
+        try {
+            final CommandLine cl = clParser.parse(optsRemove, cmdArgs);
+            Option[] opts = cl.getOptions();
+            if (opts.length < 2) {
+                cmdLog = this.execHelp(this.args[0]);
+            } else {
+
+                sw = new StringWriter();
+                pw = new PrintWriter(sw);
+                final int nbCloud = CONFIG.getInt(DcloudConfig.Param.DCLOUD_COUNT);
+
+                // dcloud server
+                final String storePass = cl.getOptionValue(Command.STORE_PASS.shortCmd);
+                final String keyPass = cl.getOptionValue(Command.KEY_PASS.shortCmd);
+                // if (LOG.isTraceEnabled()) {
+                // LOG.trace("storePass=[" + storePass + "]");
+                // LOG.trace("keyPass=[" + keyPass + "]");
+                // }
+                System.setProperty("sconfigPassword", storePass);
+                final DcloudSecureConfig sconfig = DcloudSecureConfig.getInstance();
+                pw.println(":: REMOVE FILE [" + remoteFileName + "] AT DCLOUD SERVERS ::");
+                for (int i = 0; i < nbCloud; i++) {
+                    final String idx = Integer.toString(i + 1);
+
+                    final String client = CONFIG.getString("dcloud" + idx, DcloudConfig.Param.CLIENT);
+                    final String credential = CONFIG.getString("dcloud" + idx, DcloudConfig.Param.CREDENTIAL);
+
+                    final byte[] accessToken = sconfig.getByte(credential, keyPass);
+                    final String strAccessToken = new String(accessToken, "UTF-8");
+
+                    if (LOG.isTraceEnabled()) {
+                        LOG.trace("client=[" + client + "]");
+                        LOG.trace("credential=[" + credential + "]");
+                        // LOG.trace("strAccessToken=[" + strAccessToken + "]");
+                    }
+
+                    pw.println("Remove file [" + remoteFileName + "] at dcloud" + idx + "...");
+                    final ICloudClient cloudClient = CloudClientFactory.getCloudClient(client, strAccessToken);
+                    try {
+                        cloudClient.delete(remoteFileName);
+                        pw.println("SUCCESS removing file [" + remoteFileName + "] at dcloud" + idx + "...");
                     } catch (BaseDcloudException e) {
                         pw.println(e.getMessage());
                         if (LOG.isEnabledFor(Level.ERROR)) {
@@ -441,8 +525,7 @@ public final class Cli {
                 switch (cmd) {
                     case UPLOAD: {
                         this.helpFormatter.printHelp(pw, HELP_WIDTH,
-                                "-" + Command.UPLOAD.shortCmd + "," + "--" + Command.UPLOAD.longCmd
-                                        + " <param1> ... <paramN>",
+                                "-" + Command.UPLOAD.shortCmd + "," + "--" + Command.UPLOAD.longCmd,
                                 Command.UPLOAD.getDesc() + " Following are parameters for this command: ",
                                 this.buildOptsUpload(), HELP_LEFT_PAD, HELP_DESC_PAD, null, true);
                         cmdLog = sw.toString();
@@ -457,8 +540,7 @@ public final class Cli {
                     }
                     case DOWNLOAD: {
                         this.helpFormatter.printHelp(pw, HELP_WIDTH,
-                                "-" + Command.DOWNLOAD.shortCmd + "," + "--" + Command.DOWNLOAD.longCmd
-                                        + " <param1> ... <paramN>",
+                                "-" + Command.DOWNLOAD.shortCmd + "," + "--" + Command.DOWNLOAD.longCmd,
                                 Command.DOWNLOAD.getDesc() + " Following are parameters for this command: ",
                                 this.buildOptsDownload(), HELP_LEFT_PAD, HELP_DESC_PAD, null, true);
                         cmdLog = sw.toString();
@@ -490,7 +572,7 @@ public final class Cli {
                     case REMOVE: {
                         this.helpFormatter.printHelp(pw, HELP_WIDTH,
                                 "-" + Command.REMOVE.shortCmd + "," + "--" + Command.REMOVE.longCmd
-                                        + " <arg> <param1> ... <paramN>",
+                                        + " <remoteFileName>",
                                 Command.REMOVE.getDesc() + " Following are parameters for this command: ",
                                 this.buildOptsRemove(), HELP_LEFT_PAD, HELP_DESC_PAD, null, true);
                         cmdLog = sw.toString();
@@ -645,12 +727,12 @@ public final class Cli {
 
         final Option optStorePass = new Option(Command.STORE_PASS.getShortCmd(), Command.STORE_PASS.getLongCmd(), true,
                 Command.STORE_PASS.getDesc());
-        optStorePass.setRequired(false);
+        optStorePass.setRequired(true);
         opts.addOption(optStorePass);
 
         final Option optKeyPass = new Option(Command.KEY_PASS.getShortCmd(), Command.KEY_PASS.getLongCmd(), true,
                 Command.KEY_PASS.getDesc());
-        optKeyPass.setRequired(false);
+        optKeyPass.setRequired(true);
         opts.addOption(optKeyPass);
 
         return opts;
@@ -678,12 +760,12 @@ public final class Cli {
 
         final Option optStorePass = new Option(Command.STORE_PASS.getShortCmd(), Command.STORE_PASS.getLongCmd(), true,
                 Command.STORE_PASS.getDesc());
-        optStorePass.setRequired(false);
+        optStorePass.setRequired(true);
         opts.addOption(optStorePass);
 
         final Option optKeyPass = new Option(Command.KEY_PASS.getShortCmd(), Command.KEY_PASS.getLongCmd(), true,
                 Command.KEY_PASS.getDesc());
-        optKeyPass.setRequired(false);
+        optKeyPass.setRequired(true);
         opts.addOption(optKeyPass);
 
         return opts;
@@ -702,12 +784,12 @@ public final class Cli {
 
         final Option optStorePass = new Option(Command.STORE_PASS.getShortCmd(), Command.STORE_PASS.getLongCmd(), true,
                 Command.STORE_PASS.getDesc());
-        optStorePass.setRequired(false);
+        optStorePass.setRequired(true);
         opts.addOption(optStorePass);
 
         final Option optKeyPass = new Option(Command.KEY_PASS.getShortCmd(), Command.KEY_PASS.getLongCmd(), true,
                 Command.KEY_PASS.getDesc());
-        optKeyPass.setRequired(false);
+        optKeyPass.setRequired(true);
         opts.addOption(optKeyPass);
 
         return opts;
@@ -726,12 +808,12 @@ public final class Cli {
 
         final Option optStorePass = new Option(Command.STORE_PASS.getShortCmd(), Command.STORE_PASS.getLongCmd(), true,
                 Command.STORE_PASS.getDesc());
-        optStorePass.setRequired(false);
+        optStorePass.setRequired(true);
         opts.addOption(optStorePass);
 
         final Option optKeyPass = new Option(Command.KEY_PASS.getShortCmd(), Command.KEY_PASS.getLongCmd(), true,
                 Command.KEY_PASS.getDesc());
-        optKeyPass.setRequired(false);
+        optKeyPass.setRequired(true);
         opts.addOption(optKeyPass);
 
         return opts;
@@ -749,12 +831,12 @@ public final class Cli {
 
         final Option optStorePass = new Option(Command.STORE_PASS.getShortCmd(), Command.STORE_PASS.getLongCmd(), true,
                 Command.STORE_PASS.getDesc());
-        optStorePass.setRequired(false);
+        optStorePass.setRequired(true);
         opts.addOption(optStorePass);
 
         final Option optKeyPass = new Option(Command.KEY_PASS.getShortCmd(), Command.KEY_PASS.getLongCmd(), true,
                 Command.KEY_PASS.getDesc());
-        optKeyPass.setRequired(false);
+        optKeyPass.setRequired(true);
         opts.addOption(optKeyPass);
 
         return opts;
