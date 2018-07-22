@@ -97,8 +97,10 @@ public class JCEKSKey {
 
         byte[] secret = null;
         try {
-            final Key key = this.ks.getKey(alias, pwd.toCharArray());
-            secret = key.getEncoded();
+            if (this.containsAlias(alias)) {
+                final Key key = this.ks.getKey(alias, pwd.toCharArray());
+                secret = key.getEncoded();
+            }
 
         } catch (NoSuchAlgorithmException e) {
             throw new DcloudSystemInternalException(e.getMessage(), e);
