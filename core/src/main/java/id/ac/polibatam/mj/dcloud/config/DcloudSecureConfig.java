@@ -2,58 +2,57 @@ package id.ac.polibatam.mj.dcloud.config;
 
 public class DcloudSecureConfig extends ASecureConfig {
 
-	public enum Param implements IParam {
+    private static final String CONFIG_FILE_NAME = "dcloud-sconfig.jceks";
+    private static final DcloudSecureConfig CONFIG = new DcloudSecureConfig();
 
-		DROPBOX_ACCESS_TOKEN("dropbox-access-token"),;
+    private DcloudSecureConfig() {
+        super.loadConfigProperties();
+    }
 
-		private final String name;
+    public static DcloudSecureConfig getInstance() {
+        return CONFIG;
+    }
 
-		private Param(final String name) {
-			this.name = name;
-		}
+    @Override
+    protected String getConfigFileName() {
+        return CONFIG_FILE_NAME;
+    }
 
-		@Override
-		public String getName() {
-			return this.name;
-		}
+    @Override
+    protected String getConfigFilePassword() {
+        return System.getProperty("sconfigPassword");
+    }
 
-		@Override
-		public String getDefaultValue() {
-			return null;
-		}
+    @Override
+    protected void validateConfig() {
 
-		@Override
-		public String getPattern() {
-			return null;
-		}
+    }
 
-	}
+    public enum Param implements IParam {
 
-	private static final String CONFIG_FILE_NAME = "dcloud-sconfig.jceks";
+        DROPBOX_ACCESS_TOKEN("dropbox-access-token"),;
 
-	private static final DcloudSecureConfig CONFIG = new DcloudSecureConfig();
+        private final String name;
 
-	private DcloudSecureConfig() {
-		super.loadConfigProperties();
-	}
+        private Param(final String name) {
+            this.name = name;
+        }
 
-	public static DcloudSecureConfig getInstance() {
-		return CONFIG;
-	}
+        @Override
+        public String getName() {
+            return this.name;
+        }
 
-	@Override
-	protected String getConfigFileName() {
-		return CONFIG_FILE_NAME;
-	}
+        @Override
+        public String getDefaultValue() {
+            return null;
+        }
 
-	@Override
-	protected String getConfigFilePassword() {
-		return System.getProperty("sconfigPassword");
-	}
+        @Override
+        public String getPattern() {
+            return null;
+        }
 
-	@Override
-	protected void validateConfig() {
-
-	}
+    }
 
 }

@@ -43,7 +43,7 @@ public class DcloudInvalidDataRuntimeException extends BaseDcloudRuntimeExceptio
      * Constructor.
      *
      * @param msg exception message.
-     * @param t another exception to be wrapped.
+     * @param t   another exception to be wrapped.
      */
     public DcloudInvalidDataRuntimeException(final String msg, final Throwable t) {
         super(DcloudExceptionCode.INVALID_DATA_EXCEPTION, msg, t);

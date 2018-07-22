@@ -43,7 +43,7 @@ public class DcloudGenericRuntimeException extends BaseDcloudRuntimeException {
      * Constructor.
      *
      * @param msg exception message.
-     * @param t another exception to be wrapped.
+     * @param t   another exception to be wrapped.
      */
     public DcloudGenericRuntimeException(final String msg, final Throwable t) {
         super(DcloudExceptionCode.GENERIC_EXCEPTION, msg, t);

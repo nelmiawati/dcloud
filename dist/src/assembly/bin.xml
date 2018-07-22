@@ -1,88 +1,88 @@
 <assembly
-	xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
-	<id>bin</id>
-	<formats>
-		<format>zip</format>
-	</formats>
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
+        xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+    <id>bin</id>
+    <formats>
+        <format>zip</format>
+    </formats>
 
-	<fileSets>
-	</fileSets>
+    <fileSets>
+    </fileSets>
 
-	<files>
-		<file>
-			<source>${project.basedir}/src/resources/bin/cappend.bat</source>
-			<outputDirectory>bin/</outputDirectory>
-		</file>
+    <files>
+        <file>
+            <source>${project.basedir}/src/resources/bin/cappend.bat</source>
+            <outputDirectory>bin/</outputDirectory>
+        </file>
 
-		<file>
-			<source>${project.basedir}/src/resources/bin/dcloud.bat</source>
-			<outputDirectory>bin/</outputDirectory>
-			<filtered>true</filtered>
-		</file>
-		<file>
-			<source>${project.basedir}/src/resources/bin/dcloud.sh</source>
-			<outputDirectory>bin/</outputDirectory>
-			<lineEnding>unix</lineEnding>
-			<fileMode>0744</fileMode>
-			<filtered>true</filtered>
-		</file>
+        <file>
+            <source>${project.basedir}/src/resources/bin/dcloud.bat</source>
+            <outputDirectory>bin/</outputDirectory>
+            <filtered>true</filtered>
+        </file>
+        <file>
+            <source>${project.basedir}/src/resources/bin/dcloud.sh</source>
+            <outputDirectory>bin/</outputDirectory>
+            <lineEnding>unix</lineEnding>
+            <fileMode>0744</fileMode>
+            <filtered>true</filtered>
+        </file>
 
-		<file>
-			<source>${project.basedir}/src/resources/conf/dcloud-config.properties</source>
-			<outputDirectory>conf/</outputDirectory>
-			<lineEnding>unix</lineEnding>
-			<filtered>true</filtered>
-		</file>
+        <file>
+            <source>${project.basedir}/src/resources/conf/dcloud-config.properties</source>
+            <outputDirectory>conf/</outputDirectory>
+            <lineEnding>unix</lineEnding>
+            <filtered>true</filtered>
+        </file>
 
-		<file>
-			<source>${project.basedir}/src/resources/conf/dcloud-sconfig.jceks</source>
-			<outputDirectory>conf/</outputDirectory>
-			<lineEnding>keep</lineEnding>
-			<filtered>false</filtered>
-		</file>
+        <file>
+            <source>${project.basedir}/src/resources/conf/dcloud-sconfig.jceks</source>
+            <outputDirectory>conf/</outputDirectory>
+            <lineEnding>keep</lineEnding>
+            <filtered>false</filtered>
+        </file>
 
-		<file>
-			<source>${project.basedir}/src/resources/conf/log4j.xml</source>
-			<outputDirectory>conf/</outputDirectory>
-			<lineEnding>unix</lineEnding>
-			<filtered>true</filtered>
-		</file>
+        <file>
+            <source>${project.basedir}/src/resources/conf/log4j.xml</source>
+            <outputDirectory>conf/</outputDirectory>
+            <lineEnding>unix</lineEnding>
+            <filtered>true</filtered>
+        </file>
 
-		<file>
-			<source>${project.basedir}/src/resources/conf/log4j.dtd</source>
-			<outputDirectory>conf/</outputDirectory>
-			<lineEnding>unix</lineEnding>
-			<filtered>true</filtered>
-		</file>
+        <file>
+            <source>${project.basedir}/src/resources/conf/log4j.dtd</source>
+            <outputDirectory>conf/</outputDirectory>
+            <lineEnding>unix</lineEnding>
+            <filtered>true</filtered>
+        </file>
 
-		<file>
-			<source>${project.basedir}/src/resources/sample/lipsum.txt</source>
-			<outputDirectory>workspace/</outputDirectory>
-			<lineEnding>unix</lineEnding>
-			<filtered>true</filtered>
-		</file>
+        <file>
+            <source>${project.basedir}/src/resources/sample/lipsum.txt</source>
+            <outputDirectory>workspace/</outputDirectory>
+            <lineEnding>unix</lineEnding>
+            <filtered>true</filtered>
+        </file>
 
-		<file>
-			<source>${project.basedir}/src/resources/sample/github-mark.png</source>
-			<outputDirectory>workspace/</outputDirectory>
-			<lineEnding>keep</lineEnding>
-			<filtered>false</filtered>
-		</file>
+        <file>
+            <source>${project.basedir}/src/resources/sample/github-mark.png</source>
+            <outputDirectory>workspace/</outputDirectory>
+            <lineEnding>keep</lineEnding>
+            <filtered>false</filtered>
+        </file>
 
-	</files>
+    </files>
 
-	<dependencySets>
-		<dependencySet>
-			<!-- 
-			<excludes>
-				<exclude>ac.id.polibatam.mj.dcloud:dcloud-dist</exclude>
-			</excludes>
-			 -->
-			<outputDirectory>lib</outputDirectory>
-			<unpack>false</unpack>
-		</dependencySet>
-	</dependencySets>
+    <dependencySets>
+        <dependencySet>
+            <!--
+            <excludes>
+                <exclude>ac.id.polibatam.mj.dcloud:dcloud-dist</exclude>
+            </excludes>
+             -->
+            <outputDirectory>lib</outputDirectory>
+            <unpack>false</unpack>
+        </dependencySet>
+    </dependencySets>
 
 </assembly>

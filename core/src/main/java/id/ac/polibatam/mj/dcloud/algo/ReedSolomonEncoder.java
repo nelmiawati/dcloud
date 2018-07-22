@@ -17,6 +17,7 @@ package id.ac.polibatam.mj.dcloud.algo;
 
 import id.ac.polibatam.mj.dcloud.math.GFMath;
 import id.ac.polibatam.mj.dcloud.math.GenericGFPoly;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,9 +30,9 @@ import java.util.List;
  */
 public final class ReedSolomonEncoder {
 
+    public static final int DEFAULT_GENERATOR_BASE = 1;
     private final GFMath field;
     private final int generatorBase;
-    public static final int DEFAULT_GENERATOR_BASE = 1;
     private final List<GenericGFPoly> cachedGenerators;
 
     public ReedSolomonEncoder() {

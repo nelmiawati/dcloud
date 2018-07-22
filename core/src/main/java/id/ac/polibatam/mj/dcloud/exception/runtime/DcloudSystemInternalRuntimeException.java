@@ -43,7 +43,7 @@ public class DcloudSystemInternalRuntimeException extends BaseDcloudRuntimeExcep
      * Constructor.
      *
      * @param msg exception message.
-     * @param t another exception to be wrapped.
+     * @param t   another exception to be wrapped.
      */
     public DcloudSystemInternalRuntimeException(final String msg, final Throwable t) {
         super(DcloudExceptionCode.SYSTEM_INTERNAL_EXCEPTION, msg, t);

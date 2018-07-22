@@ -8,26 +8,25 @@ package id.ac.polibatam.mj.dcloud.config;
 import org.apache.log4j.Logger;
 
 /**
- *
  * @author mia
  */
 public abstract class AConfig {
 
-	protected static final Logger LOG = Logger.getLogger(AConfig.class);
+    protected static final Logger LOG = Logger.getLogger(AConfig.class);
 
-	protected interface IParam {
+    protected abstract String getConfigFileName();
 
-		public String getName();
+    protected abstract void loadConfigProperties();
 
-		public String getDefaultValue();
+    protected abstract void validateConfig();
 
-		public String getPattern();
-	}
+    protected interface IParam {
 
-	protected abstract String getConfigFileName();
+        public String getName();
 
-	protected abstract void loadConfigProperties();
+        public String getDefaultValue();
 
-	protected abstract void validateConfig();
+        public String getPattern();
+    }
 
 }

@@ -11,25 +11,24 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- *
  * @author mia
  */
 public class Log4jTest {
-    
+
     private static final Logger LOG = Logger.getLogger(Log4jTest.class);
-    
+
     @Before
     public void before() {
-        
+
     }
-    
+
     @Test
-    public void test()  {
-        
+    public void test() {
+
         LOG.debug("start TEST");
         Assert.assertTrue(true);
         LOG.debug("finish TEST");
-        
+
     }
-    
+
 }

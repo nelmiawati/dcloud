@@ -6,16 +6,15 @@
 package id.ac.polibatam.mj.dcloud.math;
 
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.Random;
-
 import org.apache.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Random;
+
+import static org.junit.Assert.assertEquals;
+
 /**
- *
  * @author mia
  */
 public class GFMathTest {
@@ -32,22 +31,21 @@ public class GFMathTest {
 
         assertEquals(GFMath.DEFAULT_FIELD_SIZE, GFMATH.getFieldSize());
         assertEquals(GFMath.DEFAULT_PRIMITIVE_POLYNOMIAL, GFMATH.getPrimitivePolynomial());
-        
 
 
     }
-    
+
     @Test
     public void testPseudoRandom() {
         Random random1 = new Random(10);
-        for (int i = 0;i < 10; i++) {
+        for (int i = 0; i < 10; i++) {
             LOG.debug(random1.nextInt(256));
         }
-        
+
         Random random2 = new Random(10);
-        for (int i = 0;i < 10; i++) {
+        for (int i = 0; i < 10; i++) {
             LOG.debug(random2.nextInt(256));
-        }        
+        }
     }
 
 }

@@ -7,9 +7,8 @@
 package id.ac.polibatam.mj.dcloud.math;
 
 /**
- *
  * @author mia
  */
 public class GenericGFPolyTest {
-    
+
 }
