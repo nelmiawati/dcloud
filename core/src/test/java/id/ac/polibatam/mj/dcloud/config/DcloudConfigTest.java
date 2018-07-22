@@ -30,6 +30,8 @@ public class DcloudConfigTest {
     public void testConfig() {
 
         final DcloudConfig config = DcloudConfig.getInstance();
+        assertFalse(Param.DCLOUD_LOCAL_WORKSPACE.getDefaultValue().equals(config.getString(Param.DCLOUD_LOCAL_WORKSPACE)));
+        assertFalse(Param.DCLOUD_USE_SALT.getDefaultValue().equals(config.getString(Param.DCLOUD_USE_SALT)));
         assertFalse(Param.DCLOUD_COUNT.getDefaultValue().equals(config.getString(Param.DCLOUD_COUNT)));
         assertFalse(Param.DCLOUD_THRESHOLD.getDefaultValue().equals(config.getString(Param.DCLOUD_THRESHOLD)));
         assertFalse(Param.CLIENT.getDefaultValue().equals(config.getString("dcloud1", Param.CLIENT)));

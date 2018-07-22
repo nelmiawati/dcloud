@@ -23,9 +23,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Random;
-import java.util.Set;
 
 /**
  * @author mia
@@ -52,17 +50,17 @@ public class FileDispersal {
                     "INVALID threshold, has to be in the range of 1 < threshold <= vSecrentKey.length");
         }
 
-        final Random random = new Random();
-        final int[] vSecretKeyUnsigned = new int[nbTarget];
-        final Set<Integer> uniqueVSecretKeyUnsigned = new HashSet<Integer>();
-        while (uniqueVSecretKeyUnsigned.size() < vSecretKeyUnsigned.length) {
-            uniqueVSecretKeyUnsigned.add(Integer.valueOf(random.nextInt(256)));
-        }
-        int idx = 0;
-        for (Integer i : uniqueVSecretKeyUnsigned) {
-            vSecretKeyUnsigned[idx++] = i.intValue();
-        }
-
+//        final Random random = new Random();
+//        final int[] vSecretKeyUnsigned = new int[nbTarget];
+//        final Set<Integer> uniqueVSecretKeyUnsigned = new HashSet<Integer>();
+//        while (uniqueVSecretKeyUnsigned.size() < vSecretKeyUnsigned.length) {
+//            uniqueVSecretKeyUnsigned.add(Integer.valueOf(random.nextInt(256)));
+//        }
+//        int idx = 0;
+//        for (Integer i : uniqueVSecretKeyUnsigned) {
+//            vSecretKeyUnsigned[idx++] = i.intValue();
+//        }
+        final int[] vSecretKeyUnsigned = FileDispersal.generateVSecretKeyUnsigned(nbTarget);
         final byte[] vSecretKey = Converter.convertUnsignedByteToSignedByte(vSecretKeyUnsigned);
         this.init(vSecretKey, threshold);
 
@@ -214,6 +212,21 @@ public class FileDispersal {
         }
 
         return dispersedFiles;
+    }
+
+    public static int[] generateVSecretKeyUnsigned(final int nbTarget) {
+        final Random random = new Random();
+        final int[] vSecretKeyUnsigned = new int[nbTarget];
+        for (int i = 0; i < vSecretKeyUnsigned.length; i++) {
+            vSecretKeyUnsigned[i] = random.nextInt(256);
+        }
+
+        if (ArrayUtils.isUnique(vSecretKeyUnsigned)) {
+            return vSecretKeyUnsigned;
+        } else {
+            return FileDispersal.generateVSecretKeyUnsigned(nbTarget);
+        }
+
     }
 
     private void generateSecretKey(final int[] unsignedVSecretKey) {

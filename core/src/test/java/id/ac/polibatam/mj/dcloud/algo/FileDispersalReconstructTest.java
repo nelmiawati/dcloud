@@ -3,7 +3,6 @@ package id.ac.polibatam.mj.dcloud.algo;
 import id.ac.polibatam.mj.dcloud.exception.BaseDcloudException;
 import id.ac.polibatam.mj.dcloud.exception.runtime.DcloudInvalidConfigurationRuntimeException;
 import id.ac.polibatam.mj.dcloud.exception.runtime.DcloudSystemInternalRuntimeException;
-import id.ac.polibatam.mj.dcloud.util.ArrayUtils;
 import id.ac.polibatam.mj.dcloud.util.Converter;
 import org.apache.log4j.Logger;
 import org.junit.After;
@@ -14,7 +13,6 @@ import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Random;
 
 import static org.junit.Assert.assertNull;
 
@@ -44,7 +42,7 @@ public class FileDispersalReconstructTest {
         this.origFile1 = this.foundFile(origFileName1);
         this.origFile2 = this.foundFile(origFileName2);
 
-        final int[] vSecretKeyUnsigned = this.generateVSecretKeyUnsigned();
+        final int[] vSecretKeyUnsigned = FileDispersal.generateVSecretKeyUnsigned(this.nbTarget);
         this.vSecretKey = Converter.convertUnsignedByteToSignedByte(vSecretKeyUnsigned);
 
     }
@@ -66,20 +64,6 @@ public class FileDispersalReconstructTest {
         return file;
     }
 
-    private int[] generateVSecretKeyUnsigned() {
-        final Random random = new Random();
-        final int[] vSecretKeyUnsigned = new int[this.nbTarget];
-        for (int i = 0; i < vSecretKeyUnsigned.length; i++) {
-            vSecretKeyUnsigned[i] = random.nextInt(256);
-        }
-
-        if (ArrayUtils.isUnique(vSecretKeyUnsigned)) {
-            return vSecretKeyUnsigned;
-        } else {
-            return generateVSecretKeyUnsigned();
-        }
-
-    }
 
 
     @After
